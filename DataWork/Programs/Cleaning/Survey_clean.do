@@ -54,6 +54,7 @@
 	
 		
 	local	clean_var	1	//	Clean variables
+		loc	de_identify	1	//	De-identify data
 	local	gen_resil	1	//	Generate resilience measures
 	local	eval_resil	0	//	Evaluate resilience measures
 
@@ -75,8 +76,27 @@
 	*	Clean variables
 	*local	clean_var	1
 
-	
-		use "${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata.dta" ,	clear
+		
+		
+		if	`de_identify'==1	{
+			
+			use "${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata.dta" ,	clear	//	Confidential data
+			drop	Zone Wereda
+			save	"${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata_public.dta" ,	replace	//	De-identified data
+			
+			use	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis.dta", clear
+			drop	Zone Wereda	r_name	z_name	w_name	latitude	longitude
+			save	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis_public.dta" ,	replace	//	De-identified data
+			
+			use	"${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata_public.dta" ,	clear	//	De-identified data
+		}
+		
+		else	{
+			
+			use "${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata.dta" ,	clear	//	De-identified data
+		}
+
+		
 		isid	hhid	round	//	household ID and round of survey uniquely identifies observations
 
 		*	Quick data overview
@@ -279,7 +299,7 @@
 			
 			*	Number of Oxen
 			*	Import from the existing data
-			merge	1:1	hhid	round	using	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis.dta", keepusing(No_Oxen) gen(NoOxen_merged) //assert(1 3)
+			merge	1:1	hhid	round	using	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis_public.dta", keepusing(No_Oxen) gen(NoOxen_merged) //assert(1 3)
 			
 			loc	var	Oxen2pl
 			cap	drop	`var'
