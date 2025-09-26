@@ -12,16 +12,12 @@
 
 	DESCRIPTION: 	Prepare and clean climate data
 		
-	ORGANIZATION:	0 -	Preamble
-						0.1 - Environment setup
-						1	- Additional cleaning from the cleaned data
-						
+	ORGANIZATION:	1	- Import shapefiles and climate data
+					2	- Merge data to be analzyed
 
-					X - Save and Exit
-					
-	INPUTS: 		
+	INPUTS: 		Shapefiles, temperature/precipitation data
 	
-	OUTPUTS: 		
+	OUTPUTS: 		"${dtInt}/Climate_cleaned.dta"
 
 	NOTE:			File should run before running household survey cleaning and shapefile cleaning.
 	******************************************************************/
@@ -53,7 +49,7 @@
 	
 
 	/****************************************************************
-		SECTION 1: Additional cleaning from the cleaned data
+		SECTION 1: Import shapefiles and climate data
 	****************************************************************/	
 
 	
@@ -206,37 +202,6 @@
 			
 			
 				
-		
-		*	Collapse data to keep unique obs for new adm3_pcode per year-month
-			*	It is still unclear how to collapse "rf_sum" (mean? sum?), but it is not used in final analyses so let's not worry about it.
-		*	(2025-6-11) I no longer use "TEMP" mathcing, so disable it.
-		/*
-		preserve
-			keep	if	inlist(adm3_pcode,"TEMP-001","TEMP-002","TEMP-003","TEMP-004","TEMP-005")
-			collapse	(mean)	/*rf_sum*/	 rf_mean	temp_mean (max) temp_max rf_max (min) temp_min rf_min, by(year	month adm1_en adm1_pcode adm3_pcode)
-			isid	year	month	adm3_pcode
-			tempfile	Woreda_tobe_matched
-			save		`Woreda_tobe_matched'
-		restore
-		drop	if	inlist(adm3_pcode,"TEMP-001","TEMP-002","TEMP-003","TEMP-004","TEMP-005")
-		append	using	`Woreda_tobe_matched'
-		*/
-	
-/*
-	*	Construct deviation from 30-year average value
-	gen	dev_rf_sum_30yravg	=	rf_sum	-	rf_sum_30yravg
-	gen	dev_rf_mean_30yravg	=	rf_mean	-	rf_mean_30yravg
-	gen	dev_temp_mean_3yravg	=	temp_mean	-	temp_mean_30yravg
-	
-	lab	var	dev_rf_sum_30yravg	"Deviation in total Meher rainfall"
-	lab	var	dev_rf_mean_30yravg	"Deviation in average Meher rainfall"
-	lab	var	dev_temp_mean_30yravg	"Deviation in average Meher temperature"
-	
-	summ	dev_rf_sum_30yravg	dev_rf_mean_30yravg	dev_temp_mean_30yravg
-	
-	tempfile	dev_30yravg
-	save		`dev_30yravg'
-*/
 	
 	*	Create time and date variables
 	drop  date
@@ -249,12 +214,9 @@
 	compress
 	save	"${dtInt}\Climate_intermediate.dta", replace
 	
-	*	Create yearly panel
-	*	Since PSNP is yearly-data without month information, we need to use yearly panel to merge with PSNP data.
-	
-	*xtset	adm3_pcode_num year, yearly
-	*xtset	adm3_pcode_num yearmonth , monthly // monthly panel
-		
+	/****************************************************************
+		SECTION 2: Construct additional variables 
+	****************************************************************/	
 	
 	*	Create variables of interest
 
@@ -288,14 +250,7 @@
 		tempfile	past_rf_annual
 		save		`past_rf_annual'
 		
-/*
-		collapse	(sum) rf_mean, by(year adm1_en-shape_leng adm3_pcode_num)
-		rename		rf_mean	rf_annual	// I use "annual" for yearly rainfall, not to be consufed with "sum"
-		lab	var		rf_annual	"Annual rainfall this year (mm/year)"
-		note rf_annual: woreda-level average rainfall aggregated over year.
-*/
-		
-			
+	
 		
 		*	(2) Total rainfall in the meher season (May-September)
 		use "${dtInt}/Climate_intermediate.dta", clear
@@ -315,8 +270,6 @@
 			xtset	adm3_pcode_num year, yearly
 			
 			*	Construct lagged Meher rainfall
-			*gen		past_rf_sum_meher	=	l.rf_sum_meher
-			*lab	var	past_rf_sum_meher	"Total rainfall during Meher season (May-Sep) previous year (mm)"
 			gen		past_rf_mean_meher	=	l.rf_mean_meher
 			lab	var	past_rf_mean_meher	"Aveage rainfall during Meher season (May-Sep) previous year (mm/year)"
 			
@@ -343,11 +296,9 @@
 
 			merge m:1 adm3_pcode_num using `climate_30yr_avg', nogen assert(3)
 			
-			*gen	dev_rf_sum_30yravg	=	rf_sum	-	rf_sum_30yravg
 			gen	dev_rf_mean_30yravg	=	rf_mean	-	rf_mean_30yravg
 			gen	dev_temp_mean_30yravg	=	temp_mean	-	temp_mean_30yravg
 			
-			*lab	var	dev_rf_sum_30yravg		"Deviation in total annual rainfall from 30-year average"
 			lab	var	dev_rf_mean_30yravg		"Deviation in average annual rainfall from 30-year average"
 			lab	var	dev_temp_mean_30yravg	"Deviation in average temperature from 30-year average"
 			
@@ -355,23 +306,6 @@
 			
 			tempfile	dev_30yravg
 			save		`dev_30yravg'
-			
-	
-		
-/*
-	*	Construct yearly precipiation and temperature average data and merge the created variables
-	use "E:\Dropbox\Multidimensional resilience\data_preparation\Climate\Climate_intermediate.dta", clear
-	collapse	(sum)	rf_sum	rf_mean (mean) temp_mean (max) temp_max rf_max (min) temp_min rf_min, by(year adm1_en-shape_leng adm3_pcode_num)
-	
-		lab	var	rf_sum 		"Total annual rainfall (mm)"
-		lab	var	rf_mean 	"Average annual rainfall (mm/woreda)"
-		lab	var	rf_max 		"Maximum annual rainfall (mm/woreda)"
-		lab	var	rf_min 		"Minimum annual rainfall (mm/woreda)"
-		lab	var	temp_mean 	"Average temperature(C)"
-		lab	var	temp_min 	"Minimum temperature(C)"
-		lab	var	temp_max 	"Maximum temperature(C)"
-*/
-		
 		
 		*	Merge data
 		use	`past_rf_annual', clear
@@ -388,10 +322,10 @@
 	*	Save
 	compress
 	save	"${dtInt}/Climate_cleaned.dta", replace
+	cap	rm	"${dtInt}/Climate_intermediate.dta"	//	Remove intermeidate data
 	
 	
-	
-	*	Descriptive stats
+	*	Descriptive figures
 	
 		*	Annul precipitation and temperature
 		use	"${dtInt}/Climate_cleaned.dta", clear
@@ -399,13 +333,6 @@
 		graph twoway (line  temp_mean year, yaxis(1)) (connected rf_annual year, yaxis(2)), ytitle("Temperature (C)", axis(1)) ytitle("Rainfall (mm)", axis(2)) title(Annual temperature and rainfall) legend(label(1 "averarge temperature") label(2 "averarge rainfall"))
 		graph	export	"${Output}/annual_temp_rainfall.png", as(png) replace
 	
-		/*
-		*	Monthly precipitation and temperature
-		use	"E:\Dropbox\Multidimensional resilience\data_preparation\Climate\Climate_intermediate.dta", clear
-		collapse	(mean)	/*rf_sum*/	 temp_mean, by(month)
-		graph twoway (line  temp_mean month, yaxis(1)) (connected /*rf_sum*/ month, yaxis(2)), ytitle("Temperature (C)", axis(1)) ytitle("Rainfall (mm)", axis(2)) title(Monthly temperature and rainfall) legend(label(1 "averarge temperature") label(2 "averarge rainfall"))
-		graph	export	"${projectfolder}/results/monthly_temp_rainfall.png", as(png) replace
-		*/
 		
 		*	Total rainfall (mm)
 		use	"${dtInt}/Climate_cleaned.dta", clear

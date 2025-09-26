@@ -52,21 +52,13 @@
 	* Filename and log
 	loc	name_do	Survey_cl
 	
-		
+	local	de_identify	0	//	De-identify data - disabled by default (only ran by the original authors)	
 	local	clean_var	1	//	Clean variables
-		loc	de_identify	1	//	De-identify data
 	local	gen_resil	1	//	Generate resilience measures
 	local	eval_resil	0	//	Evaluate resilience measures
 
 
-		
-	/*
-	local	data_analysis	0	//	data analysis
-		local	spell_length	1	//	Spell length
-		local	trans_matrix	1	//	Transition matrix
-		local	test_stationary	0	//	Stationary test
-		local	perm_approach	1	//	permanent apporach 
-	*/
+	
 	
 	/****************************************************************
 		SECTION 1: Additional cleaning from the cleaned data
