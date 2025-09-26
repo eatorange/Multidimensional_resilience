@@ -14,6 +14,8 @@
 		
 	ORGANIZATION:	0 -	Preamble
 						0.1 - Environment setup
+						1	- Additional cleaning from the cleaned data
+						
 
 					X - Save and Exit
 					
@@ -47,23 +49,9 @@
 	set varabbrev	off
 	
 	* Filename and log
-	loc	name_do	Multidim_resil_clean
+	loc	name_do	Climate_clean
 	
-		
-	local	clean_var	1	//	Clean variables
-	local	gen_resil	1	//	Generate resilience measures
-	local	eval_resil	0	//	Evaluate resilience measures
 
-
-		
-	/*
-	local	data_analysis	0	//	data analysis
-		local	spell_length	1	//	Spell length
-		local	trans_matrix	1	//	Transition matrix
-		local	test_stationary	0	//	Stationary test
-		local	perm_approach	1	//	permanent apporach 
-	*/
-	
 	/****************************************************************
 		SECTION 1: Additional cleaning from the cleaned data
 	****************************************************************/	
@@ -184,41 +172,20 @@
 					*/	
 				
 			*	Since we have "average pixel-level rainfall per pentad (mm/pentad) per woreda", "mean" variable as described above, we aggregate this over time to compute "average pixel-level rainfall per period (month, year, etc.)"
-			*	Note that "sum" variable, total precipitation per woreda, isn't really meaningful as describedon ChatGPT answer above.
+			*	Note that "sum" variable, total precipitation per woreda, isn't really meaningful as described on ChatGPT answer above.
 			
 		
 		*	Since it is pentad data, we need to aggregate by month to merge it with temperatue data
-		collapse (sum) /*sum*/ mean (min) min (max) max, by(year month adm3_pcode)	
+		collapse (sum)  mean (min) min (max) max, by(year month adm3_pcode)	
 		
-		rename	(/*sum*/ mean min max)	(/*rf_sum*/ rf_mean rf_min rf_max)
+		rename	(mean min max)	( rf_mean rf_min rf_max)
 		
 		*lab	var	rf_sum	"Total monthly rainfall at woreda (mm/month)"
 		lab	var	rf_mean	"Average monthly rainfall (mm/month) - woreda level"
 		lab	var	rf_min	"Minimum monthly rainfall (mm/month) - woreda level"
 		lab	var	rf_max	"Maximum monthly rainfall (mm/month) - woreda level"
 		
-	/*
-		*	Before saving, construct 30-year average value from 1985-2014
-		preserve
-			
-			keep	if	inrange(month,5,9)
-			
-			collapse	(sum) rf_sum rf_mean, by(year	adm3_pcode)	// Annual meher precipitation, per each woreda
-			collapse	(mean) rf_sum rf_mean, by(adm3_pcode)	//	30-year average precipitation, per woreda
-			
-			rename	(rf_sum	rf_mean)	(rf_sum_30yravg	rf_mean_30yravg)
-			lab	var	rf_sum_30yravg	"Total (woreda) Meher (May-Sep) rainfall (mm); 30-year average (1975-2014)"
-			note	rf_sum_30yravg:	Aggregated all woreda-level fainfall 
-			lab	var	rf_mean_30yravg	"Average (woreda) Meher (May-Sep) rainfall  (mm); 30-year average (1975-2014)"
-			note	rf_mean_30yravg: Average woreda-level rainfall during Meher
-			
-			tempfile	rainfall_30yravg
-			save		`rainfall_30yravg'
-		
-		restore
 
-		merge	m:1 adm3_pcode	using	`rainfall_30yravg', nogen assert(3)
-	*/
 			
 		tempfile	CHIRPS_precipitation
 		save		`CHIRPS_precipitation'
@@ -228,56 +195,7 @@
 		merge	1:1	year month adm3_pcode using `CHIRPS_precipitation' //, nogen assert(3)
 		isid	year	month	adm3_pcode
 		
-		
-		*	Additional cleaning to be matched to the PSNP data
-		*	Basically we use adm3 code to match woreda in PSNP to shapefile
-		*	But some woreda in PSNP data have missing adm3 code, so we match those based on the conversation between Min and Kibrom (email: Oct 29, 2023)
-		*	(2025-6-11) I no longer use "TEMP-" method, as I match admin units in shapefile that are closes to those geocodes in PSNP file
-		
-			*	Create adm3 pcode variable to be modifed, to match with the PSNP data later
-			*cap	drop	adm3_pcode_raw
-			*clonevar	adm3_pcode_raw	=	adm3_pcode
-			*lab	var		adm3_pcode_raw	"(Raw) adm3_pcode"
-			*lab	var		adm3_pcode		"(Modified) adm3_pcode"
-			
-				*	(1) "SNNP - Alaba special - Alaba" (adm3 code missing in PSNP)
-				*	In shapefile, there's no "Alaba" zone, but there is "Halaba" zone with 4 woredas:  Atote Ulo,  Kulito town,  Wera, Wera Djo
-				*	"Alaba" is equivalent to "Halaba", confirmed by survey staff
-				*	Thus, we match 4 woredas in shapefile under "Halaba" zone to "Alaba speical" zone, "Alaba" woreda in PSNP data.
-				*	(2025-6-11) Found from shapefile that Alaba special woreda include all those 4 woredas above.
-					*	Geocodes in PSNP data is closest to "Atote Ulo" measured by Euclidean distance. So I match Alaba woreda in PSNP data to this woreda
-				*replace	adm3_pcode	=	"TEMP-001"	if	adm2_en=="Halaba"
-			
-				*	(2) "SNNP - Hadiya - Bedawacho" (adm3 code missing)
-				*	Match "Misrak Badawacho" and "Mirab Badowach" in shapefile to "Bedawacho"
-				*	(2025-6-11) Beadawacho was divided into "Mirab Badawacho" and "Misrak Badawacho", which both have own adm3-pcode
-					*	Among those two, "Misrak Badawacho" is slightly closer to the geocodes in PSNP data, so we use that woreda to "Bedawacho" in PSNP data
-				*br if inlist(adm3_en,"Hadero Tunto","Tembaro")
-				*replace	adm3_pcode	=	"TEMP-002"	if	inlist(adm3_en,"Mirab Badowach","Misrak Badawacho")
 
-				*	(3) SNNP - Kembata Tembaro - Omo Sheleko (adm3 code missing)
-					*	Assign "Hadero Tunto" and "Tembaro" woreda in shapefile to "Omo Sheleko"
-				*	(2025-6-11) Omo Sheleko was divided into "Hadero Tunto" and "Tembaro" woreda. They are adjacent to each other
-					*	Since PSNP data has no geocodes for them, I will match it to "Hadero Tunto".
-				*replace	adm3_pcode	=	"TEMP-003"	if	inlist(adm3_en,"Hadero Tunto","Tembaro")
-			
-				*	(4) SNNP - Konso - Konso
-				*	There are 4 woredas in Konso zone (shapefile), but none of them has name "Konso"
-				*	Thus we match all 4 woredas in Konso zone in shapefile to Konso in PSNP
-				*	Do this by manually creating duplicates of all "Konso" observations, and assign modified adm3 pcode to newly duplicated obs.
-				*	(2025-6-11)	It seems it is "Konso special woreda". Among 4 woredas in shapefile, "Karat Zuria" is closes to the geocodes in PSNP data
-				*expand 2 if inlist(adm2_en,"Konso"), gen(dup_Konso)
-				*replace	adm3_pcode	=	"TEMP-004"	if	inlist(adm2_en,"Konso")	//&	dup_Konso==1
-		
-			
-			*	(5) SNNP - Gamo Gofa - Gofa Zuria (adm3 code missing)
-				*	"Gamo Gofa" was later separated into "Gamo" and "Gofa"
-				*	In PSNP data, there are 4 Woredas under "Gamo Gofa": Kemba, Bonkie, Zala and Gofa Zuria. The first 3 has adm3 code associated with them)
-				*	In map, we have multiple woredas, including 3 woredas whose adm3 pcode matches to those in PSNP (Kemba, Bonke, Zala)
-				*	Here I match all other woredas in "Gamo" and "Gofa" zones in shapefile to "Gofa Zuria" in PSNP
-				*	(2025-6-11) I manually found that the "Gezei Gofa" woreda in "Gofa" zone is the cloest to the "Gofa Zuria"'s latitude and longtitude in PSNP data
-				*replace	adm3_pcode	=	"TEMP-005"	if	inlist(adm2_en,"Gamo","Gofa")	&	!inlist(adm3_en,"Zala","Kemba","Bonke")	// &	dup_GamoGofa==1	
-			
 			*	Save (including raw adm3_pcode)
 			*	This file would be later used in mapping.
 			preserve

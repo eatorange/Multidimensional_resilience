@@ -1,26 +1,26 @@
    * ******************************************************************** *
    * ******************************************************************** *
    *                                                                      *
-   *               PSID                                        *
-   *               MASTER DO_FILE                                         *
+   *        		Multidimensional Development Resilience				  *
+   *       	        MASTER DO_FILE                                        *
    *                                                                      *
    * ******************************************************************** *
    * ******************************************************************** *
 
        /*
-       ** PURPOSE:      Write intro to survey round here
+       ** PURPOSE:      Replicate Analyses in Lee et al. (2025) JDE paper
 
        ** OUTLINE:      PART 0: Standardize settings and install packages
                         PART 1: Prepare folder path globals
                         PART 2: Run the master dofiles for each high-level task
 
-       ** IDS VAR:      list_ID_var_here         //Uniquely identifies households (update for your project)
+       ** IDS VAR:      hhid      
 
        ** NOTES:
 
        ** WRITTEN BY:   Seungmin Lee
 
-       ** Last date modified:  25 Jan 2020
+       ** Last date modified:  September 26, 2025
        */
 
 *iefolder*0*StandardSettings****************************************************
@@ -42,28 +42,7 @@
 	clear all
 	macro	drop _all
 	
-   *Install all packages that this project requires:
-   *(Note that this never updates outdated versions of already installed commands, to update commands use adoupdate)
-   * I no longer use this code, as sharing the same ado files across the users (it is done in globals_setup.do file) would ensure better replicability. 
-
-   *Standardize settings accross users
-	foreach	command	in	univar	shapley2	winsor	estout	fre	tsspell	geoplot	moremata	palettes	colrspace	lgraph	{
-		
-		cap	which	`command'
-		if	_rc==111	{
-		
-			ssc	install	`command', replace
-		
-		}
-		
-		
-	}
-	*net install sg162.pkg, replace	//	needed for spatial analysis
-
-   *ssc install ietoolkit
-   *ieboilstart, version(14.1) maxvar(32767) matsize(11000)        //Set the version number to the oldest version used by anyone in the project team
-   *`r(version)'                        //This line is needed to actually set the version from the command above
-
+  
 *iefolder*1*FolderGlobals*******************************************************
 *iefolder will not work properly if the line above is edited
 
@@ -89,21 +68,18 @@
 
 
    if "`c(username)'"== "Seungmin Lee" {	//	Min, Desktop
-       global	projectfolder	"E:\Dropbox\Multidimensional resilience"		//	Github location
-	   *global	clouldfolder	"E:\Box\US Food Security Dynamics"	// Clouldfolder location (where rawdata is stored)
+       global	projectfolder	"E:/GitHub/Mutidimensional_resilience"		//	Github location
    }
 
    if "`c(username)'"== "ftac2" {	//	Min, personal laptop/desktop
-       global	projectfolder	"E:\Dropbox\Multidimensional resilience"
-	   *global	clouldfolder	"E:\Box\US Food Security Dynamics"
+       global	projectfolder	"E:/GitHub/Mutidimensional_resilience"
    }
    
     if "`c(username)'"	==   "slee76" {	//	Min, UND work laptop
-       global	projectfolder	"E:\Dropbox\Multidimensional resilience"
-	   *global	clouldfolder	"E:\Box\US Food Security Dynamics"
+       global	projectfolder	"E:/GitHub/Mutidimensional_resilience"
    }
     
-   
+
 
 * These lines are used to test that the name is not already used (do not edit manually)
 
@@ -127,9 +103,6 @@
 *iefolder will not work properly if the line above is edited
 
 
-   *Encrypted round sub-folder globals
-  * global PSID                   "$dataWorkFolder/PSID" 
-
    *DataSets sub-folder globals
 	global DataSets         "${dataWorkFolder}/DataSets"
 	global dtRaw			"$DataSets/Raw"
@@ -143,16 +116,9 @@
 	global doAnl             "${Programs}/Analysis" 
   	*global	data_analysis		 "${projectfolder}/data_analysis"
 
-
    *Output sub-folder globals
 	global Output               "${dataWorkFolder}/Outputs" 
-   *global PSID_outRaw          "$PSID_out/Raw" 
-   *global PSID_outFin          "$PSID_out/Final" 
-   *global	results				"${projectfolder}/results"
 
-   *Questionnaire sub-folder globals
-	*global PSID_prld              "$PSID_quest/PreloadData" 
-   *global PSID_doc               "$PSID_quest/Questionnaire Documentation" 
 
 *iefolder*1*End_FolderGlobals***************************************************
 *iefolder will not work properly if the line above is edited

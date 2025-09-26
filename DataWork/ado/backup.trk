@@ -1,0 +1,289 @@
+* 00000004
+*! version 1.0.0
+* Do not erase or edit this file
+* It is used by Stata to track the ado and help
+* files you have installed.
+
+S http://fmwww.bc.edu/repec/bocode/g
+N geoplot.pkg
+D 26 Sep 2025
+U 1
+d 'GEOPLOT': module to draw maps
+d 
+d  geoplot draws maps from shape files and other datasets. The
+d procedure is to first create one or several frames containing the
+d source data using geoframe and then apply geoplot to plot the
+d data from these frames. Multiple layers of elements such as
+d regions, borders, lakes, roads, labels, and symbols can be freely
+d combined. The look of the elements (e.g. their color) can be
+d varied depending on the values of variables.
+d 
+d KW: maps
+d KW: spatial data
+d KW: choropleth maps
+d 
+d Requires: Stata version 16.1 and moremata, palettes, colrspace from SSC (q.v.)
+d 
+d Distribution-Date: 20250806
+d 
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d 
+f g\geoplot.ado
+f g\geoplot.sthlp
+f g\geoframe.ado
+f g\geoframe.sthlp
+f _\__geoplot_layer.ado
+f l\lgeoplot_source.sthlp
+f _\_geoplot_bar.ado
+f _\_geoplot_label.ado
+f _\_geoplot_pie.ado
+f _\_geoplot_symbol.ado
+f l\lgeoplot.mlib
+e
+S http://fmwww.bc.edu/repec/bocode/m
+N moremata.pkg
+D 26 Sep 2025
+U 2
+d 'MOREMATA': module (Mata) to provide various functions
+d 
+d  This package includes various Mata functions. kern(): various
+d kernel functions; kint(): kernel integral functions; kdel0():
+d canonical bandwidth of kernel; quantile(): quantile function;
+d median(): median; iqrange(): inter-quartile range; ecdf():
+d cumulative distribution function; relrank(): grade
+d transformation; ranks(): ranks/cumulative frequencies; freq():
+d compute frequency counts; histogram(): produce histogram data;
+d mgof(): multinomial goodness-of-fit tests; collapse(): summary
+d statistics by subgroups; collapse(): summary statistics by
+d subgroups; gini(): Gini coefficient; sample(): draw random
+d sample; srswr(): SRS with replacement; srswor(): SRS without
+d replacement; upswr(): UPS with replacement; upswor(): UPS without
+d replacement; bs(): bootstrap estimation; bs2(): bootstrap
+d estimation; bs_report(): report bootstrap results; jk():
+d jackknife estimation; jk_report(): report jackknife results;
+d subset(): obtain subsets, one at a time; composition(): obtain
+d compositions, one by one; ncompositions(): determine number of
+d compositions; partition(): obtain partitions, one at a time;
+d npartitionss(): determine number of partitions; rsubset(): draw
+d random subset; rcomposition(): draw random composition; greedy():
+d one-to-one and one-to-many matching; ebal(): entropy balancing
+d (Stata 11 required); colvar(): variance, by column; meancolvar():
+d mean and variance, by column; variance0(): population variance;
+d meanvariance0(): mean and population variance; mse(): mean
+d squared error; colmse(): mean squared error, by column; sse():
+d sum of squared errors; colsse(): sum of squared errors, by
+d column; benford(): Benford distribution; cauchy(): cumulative
+d Cauchy-Lorentz dist.; cauchyden(): Cauchy-Lorentz density;
+d cauchytail(): reverse cumulative Cauchy-Lorentz; invcauchy():
+d inverse cumulative Cauchy-Lorentz; rbinomial(): generate binomial
+d random numbers; cebinomial(): cond. expect. of binomial r.v.;
+d root(): Brent's univariate zero finder; nrroot(): Newton-Raphson
+d zero finder; finvert(): univariate function inverter;
+d integrate_sr(): univariate function integration (Simpson's rule);
+d integrate_38(): univariate function integration (Simpson's 3/8
+d rule); ipolate(): linear interpolation; polint(): polynomial
+d inter-/extrapolation; sqrt(): square root of a symmetric positive
+d definite matrix; plot(): Draw twoway plot; _plot(): Draw twoway
+d plot; panels(): identify nested panel structure; _panels():
+d identify panel sizes; npanels(): identify number of panels;
+d nunique(): count number of distinct values; nuniqrows(): count
+d number of unique rows; isconstant(): whether matrix is constant;
+d nobs(): number of observations; colrunsum(): running sum of each
+d column; linbin(): linear binning; fastlinbin(): fast linear
+d binning; exactbin(): exact binning; makegrid(): equally spaced
+d grid points; cut(): categorize data vector; posof(): find element
+d in vector; which(): positions of nonzero elements; locate():
+d search an ordered vector; hunt(): consecutive search; cond():
+d matrix conditional operator; expand(): duplicate single
+d rows/columns; _expand(): duplicate rows/columns in place;
+d repeat(): duplicate contents as a whole; _repeat(): duplicate
+d contents in place; unorder2(): stable version of unorder();
+d jumble2(): stable version of jumble(); _jumble2(): stable version
+d of _jumble(); pieces(): break string into pieces; npieces():
+d count number of pieces; _npieces(): count number of pieces;
+d regexr(): regular expression replace; invtokens(): reverse of
+d tokens(); realofstr(): convert string into real; strexpand():
+d expand string argument; matlist(): display a (real) matrix;
+d insheet(): read spreadsheet file; infile(): read free-format
+d file; outsheet(): write spreadsheet file; callf(): pass optional
+d args to function; callf_setup(): setup for mm_callf().
+d 
+d KW: Mata
+d KW:  quantile
+d KW: median
+d KW: inter-quartile range
+d KW: integration
+d KW: cumulative distribution
+d KW: Cauchy distribution
+d KW: Cauchy-Lorentz distribution
+d KW: relative ranks
+d KW: running sum
+d KW: linear interpolation
+d KW: insheet
+d KW: infile
+d KW: outsheet
+d KW: spreadsheet
+d KW: tokens
+d KW: rowvector
+d KW: string
+d KW: real
+d KW: grid
+d KW: linear binning
+d KW: histogram
+d 
+d Requires: Stata version 11
+d 
+d Distribution-Date: 20250630
+d 
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d 
+f l\lmoremata.mlib
+f l\lmoremata10.mlib
+f l\lmoremata11.mlib
+f l\lmoremata14.mlib
+f m\mf_mm_sample.hlp
+f m\moremata.hlp
+f m\moremata_source.hlp
+f m\moremata10_source.hlp
+f m\moremata11_source.hlp
+f m\moremata14_source.hlp
+f m\mf_mm_unorder2.hlp
+f m\mf_mm_panels.hlp
+f m\mf_mm_quantile.hlp
+f m\mf_mm_strexpand.hlp
+f m\mf_mm_realofstr.hlp
+f m\mf_mm_posof.hlp
+f m\mf_mm_ipolate.hlp
+f m\mf_mm_invtokens.hlp
+f m\mf_mm_linbin.hlp
+f m\mf_mm_histogram.hlp
+f m\mf_mm_ecdf.hlp
+f m\mf_mm_colrunsum.hlp
+f m\mf_mm_rbinomial.hlp
+f m\mf_mm_insheet.hlp
+f m\mf_mm_cut.hlp
+f m\mf_mm_freq.hlp
+f m\mf_mm_colvar.hlp
+f m\mf_mm_gini.hlp
+f m\mf_mm_nunique.hlp
+f m\mf_mm_bs.hlp
+f m\mf_mm_callf.hlp
+f m\mf_mm_expand.hlp
+f m\mf_mm_finvert.hlp
+f m\mf_mm_greedy.hlp
+f m\mf_mm_jk.hlp
+f m\mf_mm_kern.hlp
+f m\mf_mm_locate.hlp
+f m\mf_mm_nobs.hlp
+f m\mf_mm_nrroot.hlp
+f m\mf_mm_polint.hlp
+f m\mf_mm_root.hlp
+f m\mf_mm_which.hlp
+f m\mf_mm_plot.hlp
+f m\mf_mm_pieces.hlp
+f m\mf_mm_benford.hlp
+f m\mf_mm_isconstant.hlp
+f m\mf_mm_mgof.hlp
+f m\mf_mm_subset.hlp
+f m\mf_mm_cauchy.hlp
+f m\mf_mm_matlist.hlp
+f m\mf_mm_cond.hlp
+f m\mf_mm_collapse.hlp
+f m\mf_mm_integrate.hlp
+f m\mf_mm_regexr.hlp
+f m\mf_mm_sqrt.hlp
+f m\mf_mm_ebal.sthlp
+f m\mf_mm_clip.hlp
+f m\mf_mm_ddens.hlp
+f m\mf_mm_density.sthlp
+f m\mf_mm_diff.hlp
+f m\mf_mm_group.hlp
+f m\mf_mm_minim.hlp
+f m\mf_mm_prod.hlp
+f m\mf_mm_ranks.hlp
+f m\mf_mm_relrank.hlp
+f m\mf_mm_seq.hlp
+f m\mf_mm_sort.hlp
+f m\mf_mm_hl.hlp
+f m\mf_mm_mloc.hlp
+f m\mf_mm_ls.hlp
+f m\mf_mm_qr.sthlp
+f m\mf_mm_areg.hlp
+f m\mf_mm_aqreg.hlp
+f m\mf_mm_hdq.hlp
+f m\mf_mm_version.hlp
+f m\mf_mm_ebalance.sthlp
+f m\mf_mm_wbal.sthlp
+f m\mf_mm_crosswalk.sthlp
+f m\mf_mm_read_csv.hlp
+f m\mf_mm_linbin2.hlp
+f m\mf_mm_loclin.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/p
+N palettes.pkg
+D 26 Sep 2025
+U 3
+d 'PALETTES': module to provide color palettes, symbol palettes, and line pattern palettes
+d 
+d  The palettes module contains three commands: colorpalette,
+d symbolpalette, and linepalette. The commands provide color,
+d symbol, and line pattern palettes for use in Stata graphs.
+d 
+d KW: graphics
+d KW: colors
+d KW: marker symbols
+d KW: line patterns
+d 
+d Requires: Stata version 14.2 and colrspace from SSC (q.v.); (version 9.2 for colorpalette9)
+d 
+d Distribution-Date: 20240705
+d 
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d 
+f p\palettes.hlp
+f c\colorpalette.ado
+f c\colorpalette.sthlp
+f c\colorpalette9.ado
+f c\colorpalette9.hlp
+f l\linepalette.ado
+f l\linepalette.hlp
+f s\symbolpalette.ado
+f s\symbolpalette.hlp
+f c\colorcheck.ado
+f c\colorcheck.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/c
+N colrspace.pkg
+D 26 Sep 2025
+U 4
+d 'COLRSPACE': module providing a class-based color management system in Mata
+d 
+d   The colrspace module provides a class-based color management
+d system implemented in Mata. It supports a wide variety of color
+d spaces and translations among them, provides color generators and
+d a large collection of named palettes, and features functionality
+d such as color interpolation, grayscale conversion, or color
+d vision deficiency simulation.
+d 
+d KW: graphics
+d KW: color management
+d 
+d Requires: Stata version 14.2
+d 
+d Distribution-Date: 20240705
+d 
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d 
+f c\colrspace.sthlp
+f c\colrspace_source.sthlp
+f c\colrspace_library_generators.sthlp
+f c\colrspace_library_namedcolors.sthlp
+f c\colrspace_library_palettes.sthlp
+f c\colrspace_library_lsmaps.sthlp
+f c\colrspace_library_rgbmaps.sthlp
+f l\lcolrspace.mlib
+e
