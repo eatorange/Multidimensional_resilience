@@ -113,7 +113,7 @@
    * Install all packages that this project requires:
 	*	Note that this never updates outdated versions of already installed commands.
 	*	It is NOT recommended to update ado-file because of version control; the commands may not work under new version. But if update is needed, use "adoupdate"
-   foreach	command	in	univar	shapley2	winsor	estout	fre	tsspell	geoplot	moremata	palettes	colrspace	lgraph	{
+   foreach	command	in	ietoolkit	univar	shapley2	winsor	estout	fre	tsspell	geoplot	moremata	palettes	colrspace	lgraph	{
 		
 		cap	which	`command'
 		if	_rc==111	{
@@ -124,7 +124,7 @@
 		
 		
 	}
-	net install sg162.pkg, replace	//	needed for spatial analysis
+	// net install sg162.pkg, replace	//	needed for spatial analysis
 
    
       

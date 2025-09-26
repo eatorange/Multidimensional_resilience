@@ -68,15 +68,15 @@
 
 
    if "`c(username)'"== "Seungmin Lee" {	//	Min, Desktop
-       global	projectfolder	"E:/GitHub/Mutidimensional_resilience"		//	Github location
+       global	projectfolder	"E:/GitHub/Multidimensional_resilience"		//	Github location
    }
 
    if "`c(username)'"== "ftac2" {	//	Min, personal laptop/desktop
-       global	projectfolder	"E:/GitHub/Mutidimensional_resilience"
+       global	projectfolder	"E:/GitHub/Multidimensional_resilience"
    }
    
     if "`c(username)'"	==   "slee76" {	//	Min, UND work laptop
-       global	projectfolder	"E:/GitHub/Mutidimensional_resilience"
+       global	projectfolder	"E:/GitHub/Multidimensional_resilience"
    }
     
 

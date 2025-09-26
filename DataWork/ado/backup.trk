@@ -1,4 +1,4 @@
-* 00000004
+* 00000006
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -286,4 +286,103 @@ f c\colrspace_library_palettes.sthlp
 f c\colrspace_library_lsmaps.sthlp
 f c\colrspace_library_rgbmaps.sthlp
 f l\lcolrspace.mlib
+e
+S http://fmwww.bc.edu/repec/bocode/l
+N lgraph.pkg
+D 26 Sep 2025
+U 5
+d 'LGRAPH': module to draw line graphs with optional error bars
+d 
+d  lgraph is a tool for drawing line graphs with optional error
+d bars optionally  stratified by one or two variables. lgraph
+d collapses yvar by xvar and optionally groupvar1 and groupvar2. It
+d then plots a twoway_connected graph of yvar against xvar,
+d stratified by groupvar1 and  groupvar2 with optional error bars.
+d The advantage of using lgraph is that the data is automatically
+d preserved.  Moreover, lgraph automatically takes care of the
+d coloring of the lines and the error bars, and produces meaningful
+d legends. It is most useful for graphical exploration of
+d longitudinal and/or multilevel data.
+d 
+d KW: line graph
+d KW: error bars
+d KW: multilevel
+d KW: hierarchical
+d KW: longitudinal
+d KW: panel data
+d 
+d Requires: Stata version 9
+d 
+d Distribution-Date: 20150305
+d 
+d Author: Timothy Mak, University of Hong Kong
+d Support: email tshmak@@hku.hk
+d 
+f l\lgraph.ado
+f l\lgraph.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/i
+N ietoolkit.pkg
+D 26 Sep 2025
+U 6
+d 'IETOOLKIT': module providing commands specially developed for Impact Evaluations
+d 
+d  ietookit provides a set of commands that address different
+d aspects of data management and data analysis in relation to
+d Impact Evaluations. The list of commands will be extended
+d continuously, and suggestions on new commands are highly
+d appreciated. Some of the commands are related to standardized
+d practices developed at the World Bank’s unit for Impact
+d Evaluations (DIME) and might not apply to practices adopted at
+d other institutions. For these commands, the corresponding help
+d files provide justifications for the standardized practices
+d applied. ieduplicates and iecompdup are useful tools to identify
+d and correct for duplicates. iebaltab is a tool for multiple
+d treatment arm balance tables. ieboilstart standardizes the
+d boilerplate code at the top of all do-files. iegraph produces
+d graphs based on common impact evaluation regression models. See
+d https://github.com/worldbank/ietoolkit for more details.
+d 
+d KW: reproducible research
+d KW: impact evaluations
+d KW: data management
+d KW: survey data
+d KW: data analysis
+d KW: balance tables
+d KW: difference-in-differences
+d KW: matching
+d 
+d Requires: Stata version 12
+d 
+d Distribution-Date: 20240212
+d 
+d Author: DIME Analytics, The World Bank, DECIE
+d Support: email  lcardosodeandrad@@worldbank.org
+d 
+f i\ietoolkit.ado
+f i\ietoolkit.sthlp
+f i\iebaltab.ado
+f i\iebaltab.sthlp
+f i\ieboilsave.ado
+f i\ieboilsave.sthlp
+f i\ieboilstart.ado
+f i\ieboilstart.sthlp
+f i\ieddtab.ado
+f i\ieddtab.sthlp
+f i\iedorep.ado
+f i\iedorep.sthlp
+f i\iedropone.ado
+f i\iedropone.sthlp
+f i\iefolder.ado
+f i\iefolder.sthlp
+f i\iegitaddmd.ado
+f i\iegitaddmd.sthlp
+f i\iegraph.ado
+f i\iegraph.sthlp
+f i\iekdensity.ado
+f i\iekdensity.sthlp
+f i\iematch.ado
+f i\iematch.sthlp
+f i\iesave.ado
+f i\iesave.sthlp
 e

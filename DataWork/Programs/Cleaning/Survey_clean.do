@@ -50,15 +50,11 @@
 	set varabbrev	off
 	
 	* Filename and log
-	loc	name_do	Survey_cl
+	loc	name_do	Survey_clean
 	
-	local	de_identify	0	//	De-identify data - disabled by default (only ran by the original authors)	
-	local	clean_var	1	//	Clean variables
-	local	gen_resil	1	//	Generate resilience measures
-	local	eval_resil	0	//	Evaluate resilience measures
-
-
 	
+	local	import_GPS	0	//	import GPS - requires confidnetial GPS data.
+
 	
 	/****************************************************************
 		SECTION 1: Additional cleaning from the cleaned data
@@ -66,29 +62,8 @@
 
 	
 	*	Clean variables
-	*local	clean_var	1
 
-		
-		
-		if	`de_identify'==1	{
-			
-			use "${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata.dta" ,	clear	//	Confidential data
-			drop	Zone Wereda
-			save	"${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata_public.dta" ,	replace	//	De-identified data
-			
-			use	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis.dta", clear
-			drop	Zone Wereda	r_name	z_name	w_name	latitude	longitude
-			save	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis_public.dta" ,	replace	//	De-identified data
-			
-			use	"${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata_public.dta" ,	clear	//	De-identified data
-		}
-		
-		else	{
-			
-			use "${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata.dta" ,	clear	//	De-identified data
-		}
-
-		
+		use		"${dtRaw}/PSNP/PSNP_social_protection_and_resilience_analysisdata.dta",	clear
 		isid	hhid	round	//	household ID and round of survey uniquely identifies observations
 
 		*	Quick data overview
@@ -125,7 +100,6 @@
 			*	PSNP Payment
 			gen log_psnp=asinh(PSNPtotPayM_realpc)	//	Inverse hyperbolic transformation of PSNP payment amount (approximation of log and attain zero value)
 			lab	var	log_psnp	"IHS (PSNP transfer per household member)"
-			*gen clog_psnp=log_psnp-r(mean)
 			
 			*	Head's years of education (category)
 			loc	var	educhead_cat
@@ -288,7 +262,7 @@
 			cap	drop	TLU_IHS_threshold
 			gen	TLU_IHS_threshold	=	asinh(2)
 			
-			
+			/*
 			*	Number of Oxen
 			*	Import from the existing data
 			merge	1:1	hhid	round	using	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis_public.dta", keepusing(No_Oxen) gen(NoOxen_merged) //assert(1 3)
@@ -299,6 +273,7 @@
 			replace	`var'=0	if	!mi(No_Oxen)	&	inrange(No_Oxen,0,1)
 			replace	`var'=1	if	!mi(No_Oxen)	&	!inrange(No_Oxen,0,1)
 			lab	var	`var'	"Has 2+ Oxen"
+			*/
 			
 			*	Food secure months: 12 - food gap
 			loc	var	fs_months
@@ -315,9 +290,7 @@
 				summ	`var',d
 				replace	`var'=.	if	`var'>r(p99)
 				
-				*cap	drop	`var'_wins
-				*winsor `var', gen(`var'_wins) p(0.01) highonly
-				
+		
 			}
 			
 			
@@ -600,47 +573,51 @@
 			
 		}
 		
-		
-		*	Import latitude and longitude
-		preserve
-			
-			*	We use two data to improt GPS coordinates
-			*	(i)	"PSNP_geography_of_resilience_analysis.dta", since it has GPS-coordinates from the original PSNP data
-		
-			use	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis.dta", clear
-			keep	id01 id02 id03 Wereda longitude	latitude
-			duplicates	drop
-			isid	id01 id02 id03
-			
-			tempfile	PSNP_GPS_woreda
-			save		`PSNP_GPS_woreda'
-
-				
-			*	(ii) GPS coordinate from shapefile,	"${projectfolder}/data_preparation/Climate/Shapefiles/Eth_admin_lv3", to fill in missing GPS coordinates in the first data above.
-			use	"${dtRaw}/Shapefiles/Eth_admin_lv3",	clear
-			drop	if	mi(ADM3_PCODE)
-			rename	ADM3_PCODE	adm3_pcode
-			
-			clonevar	latitude=_CY
-			clonevar	longitude=_CX
-			
-				*	Woreda's with "TEMP-xxx" has multiple GPS coordinates, as multiple woredas are assigned to such codes. I use the average GPS coordinates of them.
-				*	Averaing shouldn't be a big issue here, as he only "TEMP-xxx" woredas with missing GPS coordinates are "TEMP-003" (Omo Sheleko). Two woredas with TEMP-003 have very similar geocodes
-				*collapse (mean) latitude=_CY longitude=_CX, by(adm3_pcode)
-
-			tempfile	admin_GPS_woreda
-			save		`admin_GPS_woreda'
-			
-		restore	
-		
-		merge	m:1	id01 id02 id03 using `PSNP_GPS_woreda',	assert(2 3) keep(3) nogen //	All households in the study sample exist in PSNP geocode data
-		merge	m:1	adm3_pcode	using	`admin_GPS_woreda', keepusing(latitude longitude _ID _CX _CY Shape_Leng	Shape_Area) update assert(2 4 5) keep(4 5) nogen	//	Import missing woreda's latitude/longitudes from admin GPS data
-		assert	!mi(latitude)	&	!mi(longitude)
-		
-		lab	var	latitude	"Latitude"
-		lab	var	longitude	"Longitude"
-
 		*	Save
 		compress
-		save	"${dtInt}/PSNP_resilience_cleaned.dta", replace
+		save	"${dtInt}/PSNP_resilience_cleaned_public.dta", replace
 		
+		*	Import latitude and longitude
+		if	`import_GPS'==1	{
+			preserve
+				
+				*	We use two data to improt GPS coordinates
+				*	(i)	"PSNP_geography_of_resilience_analysis.dta", since it has GPS-coordinates from the original PSNP data
+			
+				use	"${dtRaw}/PSNP/PSNP_geography_of_resilience_analysis_public.dta", clear
+				keep	id01 id02 id03 Wereda longitude	latitude
+				duplicates	drop
+				isid	id01 id02 id03
+				
+				tempfile	PSNP_GPS_woreda
+				save		`PSNP_GPS_woreda'
+
+					
+				*	(ii) GPS coordinate from shapefile,	"${projectfolder}/data_preparation/Climate/Shapefiles/Eth_admin_lv3", to fill in missing GPS coordinates in the first data above.
+				use	"${dtRaw}/Shapefiles/Eth_admin_lv3",	clear
+				drop	if	mi(ADM3_PCODE)
+				rename	ADM3_PCODE	adm3_pcode
+				
+				clonevar	latitude=_CY
+				clonevar	longitude=_CX
+				
+					*	Woreda's with "TEMP-xxx" has multiple GPS coordinates, as multiple woredas are assigned to such codes. I use the average GPS coordinates of them.
+					*	Averaing shouldn't be a big issue here, as he only "TEMP-xxx" woredas with missing GPS coordinates are "TEMP-003" (Omo Sheleko). Two woredas with TEMP-003 have very similar geocodes
+					*collapse (mean) latitude=_CY longitude=_CX, by(adm3_pcode)
+
+				tempfile	admin_GPS_woreda
+				save		`admin_GPS_woreda'
+				
+			restore	
+			
+			merge	m:1	id01 id02 id03 using `PSNP_GPS_woreda',	assert(2 3) keep(3) nogen //	All households in the study sample exist in PSNP geocode data
+			merge	m:1	adm3_pcode	using	`admin_GPS_woreda', keepusing(latitude longitude _ID _CX _CY Shape_Leng	Shape_Area) update assert(2 4 5) keep(4 5) nogen	//	Import missing woreda's latitude/longitudes from admin GPS data
+			assert	!mi(latitude)	&	!mi(longitude)
+			
+			lab	var	latitude	"Latitude"
+			lab	var	longitude	"Longitude"
+
+			*	Save
+			compress
+			save	"${dtInt}/PSNP_resilience_cleaned.dta", replace
+		}
