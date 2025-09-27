@@ -12,14 +12,11 @@
 
 	DESCRIPTION: 	Clean data and construct multidimensional resilience measures
 		
-	ORGANIZATION:	0 -	Preamble
-						0.1 - Environment setup
-					1 - Additional cleaning from the cleaned data
-					2 - Construct resilience measures
+	ORGANIZATION:	Construct resilience measures
 					X - Save and Exit
 					
 	INPUTS: 		* PSNP pre-cleaned data
-					${data_analysis}/PSNP_social_protection_and_resilience_analysisdata.dta ,	clear
+					${data_analysis}/PSNP_resilience_cleaned.dta ,	clear
 										
 	OUTPUTS: 		* PSNP data with multidimensional resilience measures							
 					${data_analysis}/PSNP_resilience_const.dta
@@ -55,7 +52,7 @@
 	
 
 	/****************************************************************
-		SECTION 2: Construct univariate and multivariate measures
+		SECTION 1: Construct univariate and multivariate measures
 	****************************************************************/		
 	
 	*	Generate univariate resilience measures
@@ -72,8 +69,7 @@
 		*	Define programs that generate resilience measures under Normal and Gamma distribution
 		*	Note: Some dependent variables will NOT use this program, as their outcome names will be different to make consistent with older codes (that are NOT written by Min)
 				
-		*summ	 share_foodexp_allexp pdcals fs_months, d
-		
+
 			*	Normal distribution
 			cap	program	drop	resil_normal
 			program	resil_normal
@@ -98,7 +94,6 @@
 				
 				
 				*	Step 1: Conditional mean
-					*	(2025-03-03) Exclude PSNP vars (program vars) and district-FE (done in "globals.do") from construction
 				reg	`depvar'	cl.`depvar'##cl.`depvar'	${resil_RHS},	cluster(village_num)
 				est	sto	m1_`depvarname'_normal
 				
@@ -116,7 +111,6 @@
 				
 				est	store	m2_`depvarname'_normal
 				predict	var_`depvarname'_normal	if	`depvarname'_sample_normal==1, xb
-				*predict	vare_`depvarname'_normal, residuals	//	(2025-6-6) Added to compute Moran's I in variance residual
 				gen		sd_`depvarname'_normal	=	sqrt(abs(var_`depvarname'_normal))	//	Take square root of absolute value, since predicted value can be negative which does not have square root.
 				
 				
@@ -155,11 +149,8 @@
 				
 				*	Step 2: generate conditional variance
 				reg	e_`depvarname'_gamma_sq	cl.`depvar'##cl.`depvar'	${resil_RHS} 	if	`depvarname'_sample_gamma==1,	cluster(village_num)
-				*glm	e_`depvarname'_gamma_sq	cl.`depvar'##cl.`depvar' ${resil_RHS} if	`depvarname'_sample_gamma==1,	cluster(village_num) family(gamma)
-				
 				est	store	m2_`depvarname'_gamma
 				predict	var_`depvarname'_gamma	if	`depvarname'_sample_gamma==1
-				*predict	vare_`depvarname'_gamma, residuals	//	(2025-6-6) Added to compute Moran's I in variance residual
 				gen		var_`depvarname'_gamma_abs	=	abs(var_`depvarname'_gamma)	//	absolute value of variance, since predicted value can be negative which shouldn't be the case for variance
 				
 				*	Step 3: Construct the resilience measure
@@ -170,7 +161,7 @@
 				gen	`depvarname'_resil_gamma_scale	=	`depvarname'_resil_gamma*100
 				
 				lab	var	`depvarname'_resil_gamma			"`depvarname' Resilience (gamma)"
-				lab	var	`depvarname'_resil_gamma_scale	"`depvarname' Resilience (gamma scaled)"
+				lab	var	`depvarname'_resil_gamma_scale		"`depvarname' Resilience (gamma scaled)"
 				
 				reg	`depvarname'_resil_gamma	cl.`depvar'##cl.`depvar'	${resil_RHS},	cluster(village_num)
 				est	store	m3_`depvarname'_gamma
@@ -202,7 +193,6 @@
 				
 				est	store	m2_`depvarname'_igaussian
 				predict	var_`depvarname'_igaussian	if	`depvarname'_sample_igaussian	=	1
-				*predict	vare_`depvarname'_igaussian, residuals	//	(2025-6-6) Added to compute Moran's I in variance residual
 				gen		var_`depvarname'_igaussian_abs	=	abs(var_`depvarname'_igaussian)	//	absolute value of variance, since predicted value can be negative which shouldn't be the case for variance
 				
 				*	Step 3: Construct the resilience measure
@@ -217,7 +207,7 @@
 				lab	var	`depvarname'_resil_igaussian_scale	"All Expenditure Resilience (igaussian scaled)"
 				
 				*reg	`depvarname'_resil_igaussian l.`depvar'	${demovars}	${econvars}	${rainfallvar}	${programvars}	${FE},	cluster(village_num)	//	a modified version with linearity in lagged outcome
-				reg		`depvarname'_resil_igaussian cl.`depvar'##cl.`depvar'	${resil_RHS} /* ${programvars}	${demovars}	${econvars}	${rainfallvar}	${FE} */,	cluster(village_num)	//	a modified version with non-linearity in lagged outcome
+				reg		`depvarname'_resil_igaussian cl.`depvar'##cl.`depvar'	${resil_RHS},	cluster(village_num)	//	a modified version with non-linearity in lagged outcome
 				
 				estimate store m3_`depvarname'_igaussian
 			
@@ -234,14 +224,14 @@
 			
 					
 				*	Output
-				esttab	m1_allexp_normal /*m1_allexp_gamma	m1_allexp_igaussian*/	m2_allexp_normal	/*m2_allexp_gamma	m2_allexp_igaussian*/	m3_allexp_normal	/*m3_allexp_gamma	m3_allexp_igaussian*/	///
+				esttab	m1_allexp_normal	m2_allexp_normal	m3_allexp_normal		///
 						using "${Output}/Allexp_resil_const.csv", ///
 						cells(b(star fmt(a3)) se(fmt(2) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	drop(/* *woreda_id* */ ?.year) 	///
 						title(Regression of consumption expenditure, variance and resilience on household characteristics) ///
 						mtitles("Log (consumption per adult)" "Variance" "Resilience") ///
 						replace
 						
-				esttab	m1_allexp_normal /*m1_allexp_gamma	m1_allexp_igaussian*/	m2_allexp_normal	/*m2_allexp_gamma	m2_allexp_igaussian*/	m3_allexp_normal	/*m3_allexp_gamma	m3_allexp_igaussian*/	///
+				esttab	m1_allexp_normal m2_allexp_normal		m3_allexp_normal	/*m3_allexp_gamma	m3_allexp_igaussian*/	///
 						using "${Output}/Allexp_resil_const.tex", ///
 						cells(b(star fmt(a3)) se(fmt(2) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	drop(/* *woreda_id* */ ?.year) 	///
 						title(Regression of consumption expenditure, variance and resilience on household characteristics) ///
@@ -398,9 +388,8 @@
 			*	"binormal(z1,z2,rho)" function constructs binormal cdf. We use it to construct bivariate resilience measure
 			
 				*	First, get correlations among "predicted outcome measures"
-				**** Important: (2023-2-12) Chris told that the multivariate measures should be based upon "predicted" values, not "realized" vlaues.
-				pwcorr		mean_allexp_normal 	mean_foodexp_normal mean_HDDS_normal 	mean_TLU_normal mean_TLU_IHS_normal /* mean_Oxen_normal */, sig star(0.05) // predicted outcome values
-				* pwcorr	lnrexpaeu_peryear	lnrfdxpmaeu_peryear	HDDS				tlu				TLU_IHS				No_Oxen, sig star(0.05) // realized outcome values
+				**** Important: (2023-2-12) multivariate measures should be based upon "predicted" values, not "realized" vlaues.
+				pwcorr		mean_allexp_normal 	mean_foodexp_normal mean_HDDS_normal 	mean_TLU_normal mean_TLU_IHS_normal, sig star(0.05) // predicted outcome values
 				mat	pearson_outcome_corr_coef	=	r(C)
 				mat	pearson_outcome_corr_sig	=	r(sig)
 				
@@ -424,50 +413,36 @@
 				*	(2023-11-20) As noted earlier, use correlations from "predicted" values.
 				loc	var	jcdf_ae_fe	
 				cap	drop	`var'
- 				*corr	lnrexpaeu_peryear	lnrfdxpmaeu_peryear
- 				*gen `var'	=	binormal(thresh_allexp_normal,thresh_foodexp_normal,r(rho))
 				gen `var'	=	binormal(thresh_allexp_normal,thresh_foodexp_normal,corr_allexp_foodexp)
 				lab	var	`var'	"Joint CDF (all exp and food exp)"
 				
 				loc	var	jcdf_ae_HDDS	
 				cap	drop	`var'
-				*corr	lnrexpaeu_peryear	HDDS
-				*gen `var'	=	binormal(thresh_allexp_normal,thresh_HDDS_normal,r(rho))
 				gen `var'	=	binormal(thresh_allexp_normal,thresh_HDDS_normal,corr_allexp_HDDS)
 				lab	var	`var'	"Joint CDF (all exp and HDDS)"
 				
 				loc	var	jcdf_ae_TLU_IHS
 				cap	drop	`var'
-				*corr	lnrexpaeu_peryear	TLU_IHS
-				*gen `var'	=	binormal(thresh_allexp_normal,thresh_TLU_IHS_normal,r(rho))
 				gen `var'	=	binormal(thresh_allexp_normal,thresh_TLU_IHS_normal,corr_allexp_TLU_IHS)
 				lab	var	`var'	"Joint CDF (all exp and TLU(IHS))"
 				
 				loc	var	jcdf_fe_HDDS	
 				cap	drop	`var'
-				*corr	lnrfdxpmaeu_peryear	HDDS
-				*gen `var'	=	binormal(thresh_foodexp_normal,thresh_HDDS_normal,r(rho))
 				gen `var'	=	binormal(thresh_foodexp_normal,thresh_HDDS_normal,corr_foodexp_HDDS)
 				lab	var	`var'	"Joint CDF (food exp and HDDS)"
 				
 				loc	var	jcdf_fe_TLU
 				cap	drop	`var'
-				*corr	HDDS	tlu
-				*gen `var'	=	binormal(thresh_HDDS_normal,thresh_TLU_normal,r(rho))
 				gen `var'	=	binormal(thresh_HDDS_normal,thresh_TLU_normal,corr_HDDS_TLU)
 				lab	var	`var'	"Joint CDF (food exp and TLU)"
 				
 				loc	var	jcdf_fe_TLU_IHS
 				cap	drop	`var'
-				*corr	lnrfdxpmaeu_peryear	TLU_IHS
-				*gen `var'	=	binormal(thresh_foodexp_normal,thresh_TLU_IHS_normal,r(rho))
 				gen `var'	=	binormal(thresh_foodexp_normal,thresh_TLU_IHS_normal,corr_foodexp_TLU_IHS)
 				lab	var	`var'	"Joint CDF (food exp and TLU(IHS))"
 				
 				loc	var	jcdf_HDDS_TLU_IHS
 				cap	drop	`var'
-				*corr	HDDS	TLU_IHS
-				*gen `var'	=	binormal(thresh_HDDS_normal,thresh_TLU_IHS_normal,r(rho))
 				gen `var'	=	binormal(thresh_HDDS_normal,thresh_TLU_IHS_normal,corr_HDDS_TLU_IHS)
 				lab	var	`var'	"Joint CDF (HDDS and TLU(IHS))"
 								
@@ -723,43 +698,6 @@
 
 					
 							
-			
-			*	define study sample				
-			*	(2022-12-7) I am not using these indicators. This is something I can check with Kibrom
-			*	For now(2022-7-21), I define study sample as households with all resilience measures available (constructed)
-			*	Note: This study sample construction is not perfect, as it include some observation that do not have actual outcome observed but its expected value predicted (ex. tlu)
-			*	We can modify this code later if we want to fix it.
-			*	Note: Number of oxens have about 3,500 missing obs. In order not to drop them, I include those missing obs in the sample
-			*	(2022-11-6) I use households with 3 non-missing resiliences (all exp, dietary score and TLU)
-			
-			/*
-			
-				*	Outcome missing status
-				loc	var	outcome_missing
-				cap	drop	`var'
-				egen	`var'	=	rowmiss(lnrexpaeu_peryear	HDDS	TLU_IHS)
-				
-				*	Resilience missing status
-				loc	var	resil_missing
-				cap	drop	`var'
-				egen	`var'	=	rowmiss(allexp_resil_normal HDDS_resil_normal TLU_IHS_resil_normal)
-				
-				*di	"resile measusres are ${resil_measures}"
-				
-			loc	var		study_sample
-			cap	drop	`var'
-			gen			`var'=0
-			
-			*	(1) Outcome non-missing in 2006, or resilience non-missing from 2008 to 2014
-			replace		`var'=1 if (outcome_missing==0 &  round==2006) | (resil_missing==0 & inrange(round,2008,2014)) // First include observations satisfying t
-			
-			*	(2) From (1), exclude missing outcomes from 2008 to 2014
-			replace		`var'=0 if outcome_missing!=0 & inrange(round,2008,2014)
-	
-			lab	var		`var'	"=1 if study sample (outcome and resilience non-missing)"
-			
-			
-			*/
 			
 		*	Drop households whose resilience measures are missing across all periods (ex. surveyed in round 2 and 5 only)
 		*	(2024-6-29) 604 households fall under this category.

@@ -1,11 +1,12 @@
 
 	
 *	Shapley decomposition
-	use	"${dtInt}/PSNP_resilience_const.dta", clear
-	
+
 	
 
-	do "${Programs}/Globals.do" 
+	*do "${Programs}/Globals.do" 
+	use	"${dtInt}/PSNP_resilience_const.dta", clear
+	
 	
 	global	resil_measures	allexp_resil_normal HDDS_resil_normal TLU_IHS_resil_normal	///
 							resil_uni_ae_HDDS resil_uni_ae_TLU_IHS resil_uni_HDDS_TLU_IHS	resil_uni_ae_HDDS_TLU_IHS	///
@@ -16,10 +17,6 @@
 	global	year_101214	year_2	year_3	year_4
 
 	*	Shapley decomposition of resilience measures
-		*	(2025-04-16) We can include community characteristics as (i) variables: ${communityvars} (ii) FE: i.woreda_id
-		*	We earlier tested (i), and then (ii),
-		*	When testing one of the two ways, be sure to change "shapley groups" global macro and RHS in regressions.
-		
 		
 		*	Since Shapley2 does not support factor variables, need to create dummies for each woreda
 		cap	drop	woreda_dummy*
@@ -35,8 +32,6 @@
 		local	village_dummies	`r(varlist)'
 		
 		*	Turn on only one
-		*global	location_vars	${rainfallvar}	${communityvars}
-		*global	location_vars	${rainfallvar}	`woreda_dummies'
 		global	location_vars	${rainfallvar}	`village_dummies'
 		
 		*	(2025-5-7) We use four groups; (i) Head chracteristics (ii) Househol chracteristics (iii) Community and location-based (iv) Time-based
@@ -45,18 +40,6 @@
 								${location_vars}	//	location-based
 								
 		
-		*	This is the group used prior to 2025-5-7
-		/*
-		global	shapley_groups		lnhead_age lnhead_age_sq malehead	headnoed	maritals_m occupation_non_farm,	///	
-									hhsize,	///		//	
-									electricity,	///	
-									IHS_dist_nt,	///	
-									IHS_landaeu,	///
-									IHS_lvstk_real,	///
-									IHS_vprodeq_realaeu,	///
-									${rainfallvar},	/*${communityvars}*/ `woreda_dummies'
-		*/				
-
 		
 	*	Univariate 
 	foreach	depvar	in	 allexp 	 HDDS  TLU_IHS  	{
@@ -65,12 +48,8 @@
 		reg	`depvar'_resil_normal	${demovars} ${econvars}		${location_vars}	 	${year_101214},	cluster(village_num) 
 		shapley2, stat(r2) force group(${shapley_groups}, ${year_101214}) 
 		
-		mat	`depvar'_shapley_pool	=	/*e(shapley),*/	e(shapley_rel)'
-		
-															
-		*mata : st_matrix("`depvar'_shapley_sum", colsum(st_matrix("`depvar'_shapley_indiv")))
-		*mat	`depvar'_shapley	=	`depvar'_shapley_indiv	\	`depvar'_shapley_sum
-		
+		mat	`depvar'_shapley_pool	=	e(shapley_rel)'
+
 		
 		*	By year
 		forval	year=2/2	{	//	Use 2008 only
@@ -78,11 +57,8 @@
 			qui	reg	`depvar'_resil_normal	${demovars} ${econvars}	${location_vars}	if	year==`year',	cluster(village_num) 
 			shapley2, stat(r2) force group(${shapley_groups}) 
 			
-			mat	`depvar'_shapley_`year'	=	/*e(shapley),*/	e(shapley_rel)'
+			mat	`depvar'_shapley_`year'	=	e(shapley_rel)'
 			mat	`depvar'_shapley_`year'	=	`depvar'_shapley_`year', J(1,1,.) //	Add a blank column for FE, to make it conformable with pooled matrix
-			
-			*mata : st_matrix("`depvar'_shapley_sum", colsum(st_matrix("`depvar'_shapley_indiv")))
-			*mat	`depvar'_shapley	=	`depvar'_shapley_indiv	\	`depvar'_shapley_sum
 		
 			
 		}	//	year
@@ -134,9 +110,6 @@
 			
 			mat	`type'_`depvar'_shap_`year'	=	/*e(shapley),*/	e(shapley_rel)'
 			mat	`type'_`depvar'_shap_`year'	=	`type'_`depvar'_shap_`year', J(1,1,.) //	Add a blank column for FE, to make it conformable with pooled matrix
-			
-			*mata : st_matrix("`depvar'_shapley_sum", colsum(st_matrix("`depvar'_shapley_indiv")))
-			*mat	`depvar'_shapley	=	`depvar'_shapley_indiv	\	`depvar'_shapley_sum
 		
 			
 			}	//	year
@@ -225,90 +198,6 @@
 	restore
 	
 	
-	
-	
-	/*
-	*	Principal Component Analysis (PCA)
-	use	"${dtInt}/PSNP_resilience_const.dta", clear
-	
-		
-		*	Observed characteristics, pooled
-		pca		${demovars} ${econvars}	${rainfallvar}	${communityvars}	${year_101214}
-		screeplot
-		graph	export	"${Output}/screeplot_controls.png", as(png) replace
-		
-		*	2008 only
-		pca		${demovars} ${econvars}	${rainfallvar}	${communityvars}	if	year==2
-		screeplot
-		
-		*	Resilience measures, pooled
-			
-			*	Univariate measures only
-			cap	drop	resil_uni_pc1	resil_uni_pc2	resil_uni_pc3
-			pca		${resil_normal_nooxen}
-			screeplot	
-			graph	export	"${Output}/screeplot_resil_uni.png", as(png) replace
-			
-			predict resil_uni_pc1	resil_uni_pc2	resil_uni_pc3	//	1st, 2nd and 3rd component
-			mat	PCA_resil_uni_coef = r(scoef)
-			mat	rownames	PCA_resil_uni_coef	=	"Expenditure" "Dietary" "Livestock" 
-		
-		
-			*	All resilience measure (uni & multi)
-			cap	drop	resil_all_pc1	resil_all_pc2	resil_all_pc3
-			pca		${resil_measures}
-			screeplot	
-			graph	export	"${Output}/screeplot_resil_all.png", as(png) replace
-			
-			predict resil_all_pc1	resil_all_pc2	resil_all_pc3	//	1st, 2nd and 3rd component
-			mat	PCA_resil_all_coef = r(scoef)
-			mat	rownames	PCA_resil_all_coef	=	"Expenditure" "Dietary" "Livestock" ///
-												"Exp \& Diet (uni)" "Exp \& Live (uni)" "Diet \& Live (uni)" "Exp \& Diet \& Live (uni)"	///
-												"Exp \& Diet (int)" "Exp \& Live (int)" "Diet \& Live (int)" "Exp \& Diet \& Live (int)"
-			
-			
-			
-			putexcel	set "${Output}/PCA_factor", sheet(PCA) replace
-			putexcel	A1	=	"PCA on resilience measures"
-			putexcel	A2	=	"Univariate measures only"
-			putexcel	A3	=	matrix(PCA_resil_uni_coef), names overwritefmt nformat(number_d3)
-			
-			putexcel	F2	=	"Univariate and multivariate measures"
-			putexcel	F3	=	matrix(PCA_resil_all_coef), names overwritefmt nformat(number_d3)
-		
-		
-	*	Factor analysis
-		
-		*factor		${demovars} ${econvars}	${rainfallvar}	${communityvars}	${year_101214}, pcf
-		
-		*	Univariate
-		factor	${resil_normal_nooxen}, pcf
-		mat	factor_resil_uni_coef	=	e(L)
-		mat	rownames	factor_resil_uni_coef	=	"Expenditure" "Dietary" "Livestock" 
-
-			
-		*	Multivariate
-		factor	${resil_measures}, pcf
-		mat	factor_resil_all_coef	=	e(L)
-		mat	rownames	factor_resil_all_coef	=	"Expenditure" "Dietary" "Livestock" ///
-											"Exp \& Diet (uni)" "Exp \& Live (uni)" "Diet \& Live (uni)" "Exp \& Diet \& Live (uni)"	///
-											"Exp \& Diet (int)" "Exp \& Live (int)" "Diet \& Live (int)" "Exp \& Diet \& Live (int)"
-
-				
-		putexcel	set "${Output}/PCA_factor", sheet(factor) modify
-		putexcel	A1	=	"Factor on resilience measures"
-		
-		putexcel	A2	=	"Univariate measures"
-		putexcel	A3	=	matrix(factor_resil_uni_coef), names overwritefmt nformat(number_d3)	
-		
-		putexcel	F2	=	"Univariate and multivarite measures"
-		putexcel	F3	=	matrix(factor_resil_all_coef), names overwritefmt nformat(number_d3)	
-
-			
-		*	Save
-		save	"${dtInt}/PSNP_resilience_const_PCA.dta", replace
-		
-	*/	
 	
 	*	Targeting
 	use	"${dtInt}/PSNP_resilience_const.dta", clear
@@ -438,29 +327,6 @@
 
 			}	//	depvar
 			
-		/*
-			*	PCA score (univariate only, univariate & multivariate)
-				
-			foreach	depvar	in	uni	all	{
-				
-				foreach	type	in	all	nopsnp	{
-					
-					cap	drop	pc1_`depvar'_resil_qtile_`type'_`year_base'		pc1_`depvar'_resil_psnp_`type'_`year_base'
-					xtile		pc1_`depvar'_resil_qtile_`type'_`year_base'	=	resil_`depvar'_pc1	///
-						if	round==`year_base'	&	target_sample_`type',	nquantiles(100)
-					
-		
-					*	Categorize equal share of PSNP partipants as PSNP.
-					cap	drop	pc1_`depvar'_resil_psnp_`type'_`year_base'
-					gen			pc1_`depvar'_resil_psnp_`type'_`year_base'=0	///
-						if	round==`year_base' & target_sample_`type'==1	&	inrange(pc1_`depvar'_resil_qtile_`type'_`year_base',pct_nonpsnp_`year_actual'_`type',100)	// NOT targeted as PSNP
-					replace		pc1_`depvar'_resil_psnp_`type'_`year_base'=1	///
-						if	round==`year_base' & target_sample_`type'==1	&	inrange(pc1_`depvar'_resil_qtile_`type'_`year_base',1,pct_nonpsnp_`year_actual'_`type')		//	targeted as PSNP
-				
-				}	//	type
-				
-			}	//	depvar
-		*/
 	
 				
 			*	Inclusion and exclusion error, based on acutal psnp status
@@ -555,9 +421,7 @@
 				
 				*	Append matrices across type
 				mat	matching_`var'_both_`year_base'		=	matching_`var'_all_`year_base',	twobytwo_blank,	matching_`var'_nopsnp_`year_base'
-				*mat	matching_`var'_both_`year_base'_r	=	matching_`var'_all_`year_base'_r	\	matching_`var'_nopsnp_`year_base'_r
-				*mat	matching_all	=	nullmat(matching_all)	\	twobysix_blank	\	matching_`var'_both
-				
+		
 				if	"`var'"	==	"allexp"	{
 					
 					mat	matching_all_`year_base'	=	matching_`var'_both_`year_base'
@@ -599,7 +463,7 @@
 		}	//	year_base
 		
 			
-		*	Figure x
+		*	Figure 9 and 10
 	preserve
 		
 		clear
@@ -653,87 +517,3 @@
 	
 	restore	
 		
-		/*	
-		
-		*	Distribution of resilicne across communities
-		use	"${data_analysis}/PSNP_resilience_const_PCA.dta", clear
-		
-			*	Box plot
-			graph	box	allexp_resil_normal	HDDS_resil_normal TLU_IHS_resil_normal if id01==1,  over(woreda_id/*, sort(1)*/)  /* nooutsides */ ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(resil_by_woreda_tigray, replace) title(Tigray) note("")	
-					
-			graph	box	allexp_resil_normal	HDDS_resil_normal TLU_IHS_resil_normal if id01==3,  over(woreda_id/*, sort(1)*/)  /* nooutsides */ ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(resil_by_woreda_amhara, replace) title(Amhara) note("")	
-					
-			graph	box	allexp_resil_normal	HDDS_resil_normal TLU_IHS_resil_normal if id01==4,  over(woreda_id/*, sort(1)*/)  /* nooutsides */ ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(resil_by_woreda_oromiya, replace) title(Oromiya) note("")	
-					
-			graph	box	allexp_resil_normal	HDDS_resil_normal TLU_IHS_resil_normal if id01==7,  over(woreda_id/*, sort(1)*/)  /* nooutsides */ ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(resil_by_woreda_SNNP, replace) title(SNNP) note("")	
-					
-					
-			*graph	combine	resil_by_woreda_tigray	resil_by_woreda_amhara	resil_by_woreda_oromiya	resil_by_woreda_SNNP, title(Resiliences by community)
-			grc1leg resil_by_woreda_tigray	resil_by_woreda_amhara	resil_by_woreda_oromiya	resil_by_woreda_SNNP, rows(2) legendfrom(resil_by_woreda_tigray)	graphregion(color(white)) /*(white)*/
-			graph	export	"${Output}/resil_box_by_woreda.png", as(png) replace
-			
-			
-			*	Binary resilience
-			
-			graph	bar (mean) HH_resilient_allexp HH_resilient_HDDS HH_resilient_TLU_IHS if id01==1, ///
-				over(woreda_id) legend(pos(6) row(1) lab (1 "Consumption") lab(2 "Dietary") lab(3 "Livestock")) ylabel(0(0.2)1) title(Tigray) name(resilient_tigray, replace)
-				
-			graph	bar (mean) allexp_resil_normal HDDS_resil_normal TLU_IHS_resil_normal if id01==3, ///
-				over(woreda_id) legend(pos(6) row(1) lab (1 "Consumption") lab(2 "Dietary") lab(3 "Livestock")) ylabel(0(0.2)1) title(Amhara) name(resilient_amhara, replace)
-				
-			graph	bar (mean) allexp_resil_normal HDDS_resil_normal TLU_IHS_resil_normal if id01==4, ///
-				over(woreda_id) legend(pos(6) row(1) lab (1 "Consumption") lab(2 "Dietary") lab(3 "Livestock")) ylabel(0(0.2)1) title(Oromiya) name(resilient_oromiya, replace)
-			
-			graph	bar (mean) allexp_resil_normal HDDS_resil_normal TLU_IHS_resil_normal if id01==7, ///
-				over(woreda_id) legend(pos(6) row(1) lab (1 "Consumption") lab(2 "Dietary") lab(3 "Livestock")) ylabel(0(0.2)1) title(SNNP) name(resilient_snnp, replace)
-		
-			
-			grc1leg resilient_tigray	resilient_amhara	resilient_oromiya	resilient_snnp, rows(2) legendfrom(resilient_tigray) title (Resilient households)	graphregion(color(white)) /*(white)*/
-			graph	export	"${results}/resiient_by_woreda.png", as(png) replace
-		*collapse (mean) HH_resilient_allexp HH_resilient_HDDS HH_resilient_TLU_IHS, by(year woreda_id)
-		
-		
-
-		
-		
-		graph	box	HH_resilient_allexp HH_resilient_HDDS HH_resilient_TLU_IHS if id01==3,  over(woreda_id, sort(1))  nooutsides ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(resil_by_woreda_tigray, replace) title(Tigray) note("")	///
-					note("Extreme values – smaller than the lower quartile minus 1.5 times interquartile range,"  "or greater than the upper quartile plus 1.5 times interquartile range – are not plotted.")
-			
-		
-		
-		
-		
-		
-		graph	combine	resil_tigray	resil_amhara	resil_oromiya	resil_snnp, title(Resiliences by community)
-		
-		
-		collapse	(mean) allexp_resil_normal HDDS_resil_normal TLU_IHS_resil_normal, by(woreda_id)
-		graph	bar (mean) allexp_resil_normal, over(woreda_id)
-		
-		graph	twoway	(hist	allexp_resil_normal) (kdensity	HDDS_resil_normal)	(kdensity	TLU_IHS_resil_normal)
-		
-		
-		
-		graph	box	allexp_resil_normal	HDDS_resil_normal TLU_IHS_resil_normal if id01==1,  over(woreda_id, sort(1))  nooutsides ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(resil_by_woreda_tigray, replace) title(Resiliences by Zone) note("")	///
-					note("Extreme values – smaller than the lower quartile minus 1.5 times interquartile range,"  "or greater than the upper quartile plus 1.5 times interquartile range – are not plotted.")
-				
-	
-		
-		
-		graph	box	allexp_resil_normal	, over(ind_female, sort(1)) over(ind_nonWhite, sort(1))	over(ind_edu_cat, sort(1)) nooutsides ///
-					bgcolor(white)	graphregion(color(white))	legend(pos(6) row(1)) ///
-					name(outcome_subgroup_ind, replace) title(Estimated Food Security by Subgroup) note("")	///
-					note("Extreme values – smaller than the lower quartile minus 1.5 times interquartile range,"  "or greater than the upper quartile plus 1.5 times interquartile range – are not plotted.")
-				

@@ -114,7 +114,6 @@
 	global doCln             "${Programs}/Cleaning" 
 	global doCon             "${Programs}/Construct" 
 	global doAnl             "${Programs}/Analysis" 
-  	*global	data_analysis		 "${projectfolder}/data_analysis"
 
    *Output sub-folder globals
 	global Output               "${dataWorkFolder}/Outputs" 
@@ -158,25 +157,26 @@
 
    **Set the locals corresponding to the tasks you want
    * run to 1. To not run a task, set the local to 0.
-   local importDo       0
-   local cleaningDo     0
-   local constructDo    0
-   local analysisDo     0
-
-   if (`importDo' == 1) { // Change the local above to run or not to run this file
-       do "$PSID_doImp/PSID_import_MasterDofile.do" 
-   }
+   local cleaningDo     1
+   local constructDo    1
+   local analysisDo     1
 
    if (`cleaningDo' == 1) { // Change the local above to run or not to run this file
-       do "$PSID_do/PSID_cleaning_MasterDofile.do" 
+       do	"${doCln}/Climate_clean.do" 
+	   do	"${doCln}/Survey_clean.do" 
    }
 
    if (`constructDo' == 1) { // Change the local above to run or not to run this file
-       do "$PSID_do/PSID_construct_MasterDofile.do" 
+       do	"${doCon}/Resilience_const.do" 
    }
 
    if (`analysisDo' == 1) { // Change the local above to run or not to run this file
-       do "$PSID_do/PSID_analysis_MasterDofile.do" 
+       do	"${doAnl}/Evaluate_resilience.do" 
+	   do	"${doAnl}/Descriptive_and_dynamics.do" 
+	   do	"${doAnl}/Mapping.do" 
+	   do	"${doAnl}/Regression.do" 
+	   do	"${doAnl}/Variance_decomposition.do" 
+	   *do	"${doAnl}/Spatial_Analysis.do" 	//	Needs confidential latitude and longitdue data to run
    }
 
 *iefolder*3*End_RunDofiles******************************************************

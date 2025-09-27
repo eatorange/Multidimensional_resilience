@@ -9,18 +9,6 @@
 	*	Reference: https://stats.oarc.ucla.edu/stata/faq/how-can-i-calculate-morans-i-in-stata/
 	*	Since constructing weighting matrix on the entire smaple is too computatioanlly intensive to be done, we do MCS
 	
-	/*
-	summ	latitude
-	local	lat_min=r(min)
-	local	lat_max=r(max)
-	
-	summ	longitude
-	local	long_min=r(min)
-	local	long_max=r(max)
-	
-	loc		band_upper=ceil(sqrt((`lat_max' - `lat_min')^2 + (`long_max' - `long_min')^2))
-	*/
-
 		
 	*	Gemerate weighting matrix each year where each woreda has 10 obs
 	*	NOTE: NOT all rounds have 60 woreda available, so need to create matrix per round
@@ -289,13 +277,3 @@
 			graph	close		
 					
 		
-		*	I do NOT test spxtregress, as it creates very strange conditional means (predicted value)
-		/*
-		cap	drop	mean_allexp_spxtreg_xb	mean_allexp_spxtreg_rm	mean_allexp_spxtreg_dm	mean_allexp_spxtreg_im
-		spxtregress 	lnrexpaeu_peryear	c.l_lnrexpaeu_peryear##c.l_lnrexpaeu_peryear	${resil_RHS}, fe  dvarlag(W)	errorlag(W)	
-		predict	mean_allexp_spxtreg_xb, xb
-		predict	mean_allexp_spxtreg_rm, rform
-		predict	mean_allexp_spxtreg_dm, direct
-		predict	mean_allexp_spxtreg_im, indirect
-		*/
-	

@@ -12,16 +12,10 @@
 
 	DESCRIPTION: 	Construct dynamics measures
 		
-	ORGANIZATION:	0 -	Preamble
-						0.1 - Environment setup
-					1 - Additional cleaning
-					2 - Descriptive analyses
-					3 - Regression analyses
-					4 - Dynamics analyses
-					X - Save and Exit
-					
+	ORGANIZATION:	Regression-based analysis
+	
 	INPUTS: 		* PSNP pre-cleaned data
-					${data_analysis}/PSNP_resilience_dyn.dta ,	clear
+					${data_analysis}/PSNP_resilience_const.dta ,	clear
 										
 	OUTPUTS: 		* Various outputs (need to write it later)
 
@@ -67,10 +61,6 @@
 	
 	*	Regression of univariate resilience measures on HH characteristics (Table 4 of Feb 2023)
 	*	(2024-3-10) Drop program vars from regression
-// 	cap	drop	dev_rf_mean_30yravg_m
-// 	gen		dev_rf_mean_30yravg_m	=	dev_rf_mean_30yravg*1000
-// 	lab	var	dev_rf_mean_30yravg_m	"Deviation in annual average rainfall from 30-year average (m)"
-//		
 
 		cap	drop	dev_rf_mean_30yravg_m
 		gen			dev_rf_mean_30yravg_m	=	dev_rf_mean_30yravg / 1000
@@ -91,44 +81,6 @@
 		reg	TLU_IHS_resil_normal	lag_TLU_IHS		${resil_RHS}	dev_rf_mean_30yravg_m   /*${demovars}	${econvars}	${rainfallvar}	${FE}	${programvars} */	,	vce(bootstrap, reps(500))
 		est	store	resil_TLU_IHS_on_HH
 		
-			*	(2025-6-27) We no longer use it.
-			/*
-			*	W/o Bale and Borena (to appendix)
-			reg	allexp_resil_normal		lag_lnrexpaeu_peryear	${resil_RHS}		dev_rf_mean_30yravg_m  /*${demovars}	${econvars}	${rainfallvar}	${FE}	${programvars} */	if	!inlist(Zone,"Bale","Borena"),	vce(bootstrap, reps(500))
-			est	store	resil_allexp_on_HH_nobb
-			reg	HDDS_resil_normal		lag_HDDS	${resil_RHS}		dev_rf_mean_30yravg_m  /*${demovars}	${econvars}	${rainfallvar}	${FE}	${programvars} */	if	!inlist(Zone,"Bale","Borena"),	vce(bootstrap, reps(500))
-			est	store	resil_HDDS_on_HH_nobb
-			reg	TLU_IHS_resil_normal	lag_TLU_IHS	${resil_RHS}		dev_rf_mean_30yravg_m  /*${demovars}	${econvars}	${rainfallvar}	${FE}	${programvars} */	if	!inlist(Zone,"Bale","Borena"),	vce(bootstrap, reps(500))
-			est	store	resil_TLU_IHS_on_HH_nobb
-			*/
-		
-			*	(2024-4-29) Try 3 combinations (PSNP only, PSNP amount only, both) x 2 samples (with and Without Bale/Borena) x 3 outcomes				
-			*	(2024-5-12) Disable it, as we finished testing
-			
-			/*
-			loc proc1	psnp
-			loc	proc2	log_psnp
-			loc	proc3	psnp	log_psnp
-			
-			loc	samp1	//	all sample
-			loc	samp2	if !inlist(Zone,"Bale","Borena")	//	Without Bale/Borena
-					
-			
-			foreach	outtype	in	allexp	HDDS	TLU_IHS	{	//	each outcome
-				
-				forval	procnum=1/3	{	//	each specification
-					
-					forval	sampnum=1/2	{	//	with and w/o Bale/Borena
-						
-						reg	`outtype'_resil_normal	l.${outcome_`outtype'}	${demovars}	${econvars}	${rainfallvar}	dev_rf_mean_30yravg_m   `proc`procnum''	${FE}	`samp`sampnum'',	vce(bootstrap, reps(500))
-						est	store	resil_`outtype'_`sampnum'
-					}
-					
-				}
-				
-			}
-			
-			*/
 			
 		*	Output
 
@@ -153,47 +105,7 @@
 						mtitles("Expenditure" "Dietary" "Livestock") ///
 						note(Standard errors bootstrapped with 500 repetitions) replace
 						
-				/*
-				*	Full table (Appendix)
-				esttab	resil_allexp_on_HH resil_HDDS_on_HH	resil_TLU_IHS_on_HH		///
-						using "${Output}/resil_uni_on_HH_full.csv", ///
-						cells(b(star fmt(3)) se(fmt(2) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						/*keep(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)	order(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)*/	///
-						drop(*.woreda_id *.year lag_*)	///
-						title(Regression of univariate resilience on household characteristics) ///
-						mtitles("Expenditure" "Dietary" "Livestock") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-						
-				esttab	resil_allexp_on_HH resil_HDDS_on_HH	resil_TLU_IHS_on_HH		///
-						using "${Output}/resil_uni_on_HH_full.tex", ///
-						cells(b(star fmt(3)) se(fmt(2) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						/*keep(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)	order(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)*/	///
-						drop(*.woreda_id *.year lag_*)	///
-						title(Regression of univariate resilience on household characteristics) ///
-						mtitles("Expenditure" "Dietary" "Livestock") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-				*/
 				
-					*	(2024-5-12) Without Bale/Borena (appendix)
-					/*	
-						esttab	resil_allexp_on_HH_nobb resil_HDDS_on_HH_nobb	resil_TLU_IHS_on_HH_nobb	///
-						using "${Output}/resil_uni_on_HH_noBB.csv", ///
-						cells(b(star fmt(3)) se(fmt(2) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						/*keep(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)	order(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)*/	///
-						drop(*.woreda_id *.year lag_*)	///
-						title(Regression of univariate resilience on household characteristics - W/O Bale and Borena) ///
-						mtitles("Expenditure" "Dietary" "Livestock") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-						
-						esttab	resil_allexp_on_HH_nobb resil_HDDS_on_HH_nobb	resil_TLU_IHS_on_HH_nobb	///
-						using "${Output}/resil_uni_on_HH_noBB.tex", ///
-						cells(b(star fmt(3)) se(fmt(2) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						/*keep(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)	order(psnp OFSP_HABP "c.psnp#c.OFSP_HABP"	log_psnp	${rainfallvar}	dev_rf_mean_30yravg_m)*/	///
-						drop(*.woreda_id *.year lag_*)	///
-						title(Regression of univariate resilience on household characteristics - W/O Bale and Borena) ///
-						mtitles("Expenditure" "Dietary" "Livestock") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-					*/
 
 	*	Regression of bivariate resilience measures on HH characteristics
 	*	(2024-3-10) Drop program vars
@@ -256,113 +168,10 @@
 		est	store	resil_int_ae_HDDS_TLU_IHS
 		
 		
-		
-		*	(2024-3-10) Disabled this plot, as we no longer use program vars on regression.
-		/*		
-		coefplot	(resil_avg_ae_HDDS, mcolor(gs2) msymbol(diamond))	(resil_uni_ae_HDDS, mcolor(gs9)	msymbol(circle))	(resil_int_ae_HDDS, mcolor(gs5)	msymbol(triangle)), bylabel("CE and Dietary")	||	///
-					(resil_avg_ae_TLU_IHS, mcolor(gs2) msymbol(diamond))	(resil_uni_ae_TLU_IHS, mcolor(gs9)	msymbol(circle))	(resil_int_ae_TLU_IHS, mcolor(gs5)	msymbol(triangle)), bylabel("CE and Livestock")	||	///
-					(resil_avg_HDDS_TLU_IHS, mcolor(gs2) msymbol(diamond))	(resil_uni_HDDS_TLU_IHS, mcolor(gs9)	msymbol(circle))	(resil_int_HDDS_TLU_IHS, mcolor(gs5)	msymbol(triangle)), bylabel("Dietary and Livestock")	||	///
-					(resil_avg_ae_HDDS_TLU_IHS, mcolor(gs2) msymbol(diamond))	(resil_uni_ae_HDDS_TLU_IHS, mcolor(gs9)	msymbol(circle))	(resil_int_ae_HDDS_TLU_IHS, mcolor(gs5)	msymbol(triangle)), bylabel("CE, Dietary and Livestock")	||,	///
-					keep(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp)	///	
-					xline(0)	graphregion(color(white)) bgcolor(white)	legend(lab (2 "Average") lab(4 "Union") lab(6 "Intersection")	rows(1))	///
-					ylabel(1 "PSNP" 2 "HABP" 3 "PSNP x HABP" 4 "IHS (PSNP transfer per capita)",	labsize(small)) 	name(resil_multi_on_HH, replace)
-		graph	export	"${Output}/resil_multi_on_HH.png", replace
-		graph	close
-		*/
-		
-
+	
 	
 		*	Export
-			
-			
-			*	PSNP and raninfall variables only (main text. Table 6 of Nov 2023 draft)
-			*	(2024-3-10) Disable it for now, as we no longer use program vars
-			
-			/*
-				
-				*	Panel (a)
-				esttab	resil_avg_ae_HDDS		resil_uni_ae_HDDS		resil_int_ae_HDDS	///
-						resil_avg_ae_TLU_IHS	resil_uni_ae_TLU_IHS	resil_int_ae_TLU_IHS	///
-						using "${Output}/resil_multi_on_HH_panel_a.csv", ///
-						cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						keep(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m) 	///
-						order(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m)	///
-						title(Regression of multivariate resilience on household characteristics - part 1) ///
-						mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
 		
-				esttab	resil_avg_ae_HDDS		resil_uni_ae_HDDS		resil_int_ae_HDDS	///
-						resil_avg_ae_TLU_IHS	resil_uni_ae_TLU_IHS	resil_int_ae_TLU_IHS	///
-						using "${Output}/resil_multi_on_HH_part1.tex", ///
-						cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						keep(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m) 	///
-						order(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m)	///
-						title(Regression of multivariate resilience on household characteristics - part 1) ///
-						mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-					
-				*	Panel (b)
-				esttab	resil_avg_HDDS_TLU_IHS		resil_uni_HDDS_TLU_IHS		resil_int_HDDS_TLU_IHS	///
-						resil_avg_ae_HDDS_TLU_IHS		resil_uni_ae_HDDS_TLU_IHS		resil_int_ae_HDDS_TLU_IHS	///
-						using "${Output}/resil_multi_on_HH_panel_b.csv", ///
-						cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						keep(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m) 	///
-						order(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m)	///
-						title(Regression of multivariate resilience on household characteristics - part 1) ///
-						mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-						
-				esttab	resil_avg_HDDS_TLU_IHS		resil_uni_HDDS_TLU_IHS		resil_int_HDDS_TLU_IHS	///
-						resil_avg_ae_HDDS_TLU_IHS		resil_uni_ae_HDDS_TLU_IHS		resil_int_ae_HDDS_TLU_IHS	///
-						using "${Output}/resil_multi_on_HH_panel_b.tex", ///
-						cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-						keep(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m) 	///
-						order(psnp OFSP_HABP c.psnp#c.OFSP_HABP log_psnp ln_rf_annual dev_rf_mean_30yravg_m)	///
-						title(Regression of multivariate resilience on household characteristics - part 1) ///
-						mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-						note(Standard errors bootstrapped with 500 repetitions) replace
-			
-			
-			*	Full table, Part 1 (pov and nut biv, pov and ast biv) - Appendix A3 of Nov 2023 draft
-			esttab	resil_avg_ae_HDDS		resil_uni_ae_HDDS		resil_int_ae_HDDS	///
-					resil_avg_ae_TLU_IHS	resil_uni_ae_TLU_IHS	resil_int_ae_TLU_IHS	///
-					using "${Output}/resil_multi_on_HH_part1.csv", ///
-					cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-					drop(lag_lnrexpaeu_peryear	lag_HDDS	lag_TLU_IHS *woreda_id* ?.year) 	///
-					title(Regression of multivariate resilience on household characteristics - part 1) ///
-					mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-					note(Standard errors bootstrapped with 500 repetitions) replace
-	
-			esttab	resil_avg_ae_HDDS		resil_uni_ae_HDDS		resil_int_ae_HDDS	///
-					resil_avg_ae_TLU_IHS	resil_uni_ae_TLU_IHS	resil_int_ae_TLU_IHS	///
-					using "${Output}/resil_multi_on_HH_part1.tex", ///
-					cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-					drop(lag_lnrexpaeu_peryear	lag_HDDS	lag_TLU_IHS *woreda_id* ?.year) 	///
-					title(Regression of multivariate resilience on household characteristics - part 1) ///
-					mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-					note(Standard errors bootstrapped with 500 repetitions) replace
-					
-					
-			*	Full table, Part 2 (nut and ast biv, trivariate)- Appendix A4 of Nov 2023 draft
-			esttab	resil_avg_HDDS_TLU_IHS		resil_uni_HDDS_TLU_IHS		resil_int_HDDS_TLU_IHS	///
-					resil_avg_ae_HDDS_TLU_IHS		resil_uni_ae_HDDS_TLU_IHS		resil_int_ae_HDDS_TLU_IHS	///
-					using "${Output}/resil_multi_on_HH_part2.csv", ///
-					cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-					drop(lag_lnrexpaeu_peryear	lag_HDDS	lag_TLU_IHS *woreda_id* ?.year) 	///
-					title(Regression of multivariate resilience on household characteristics - part 2) ///
-					mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-					note(Standard errors bootstrapped with 500 repetitions) replace
-	
-			esttab	resil_avg_HDDS_TLU_IHS		resil_uni_HDDS_TLU_IHS		resil_int_HDDS_TLU_IHS	///
-					resil_avg_ae_HDDS_TLU_IHS		resil_uni_ae_HDDS_TLU_IHS		resil_int_ae_HDDS_TLU_IHS	///
-					using "${Output}/resil_multi_on_HH_part2.tex", ///
-					cells(b(star fmt(3)) se(fmt(3) par)) stats(N r2) label legend nobaselevels  star(* 0.10 ** 0.05 *** 0.01)	///
-					drop(lag_lnrexpaeu_peryear	lag_HDDS	lag_TLU_IHS *woreda_id* ?.year) 	///
-					title(Regression of multivariate resilience on household characteristics - part 2) ///
-					mtitles("Avg" "Uni" "Int" "Avg" "Uni" "Int") ///
-					note(Standard errors bootstrapped with 500 repetitions) replace
-	
-			*/
 			
 			*	(2024-3-10) Use bivariate (CE) and trivariate on one table.
 			esttab	resil_avg_ae_HDDS		resil_uni_ae_HDDS		resil_int_ae_HDDS	///
@@ -450,13 +259,7 @@
 				clonevar	TLU_IHS_resil_normal_2	=	TLU_IHS_resil_normal
 			
 			forval	cutoff=2(2)6	{
-				
-				*	Generate a binary indicator if expenditure resilience is below 0.5
-				*cap	drop	`var'_resil
-				*gen		`var'_resil=.
-				*replace	`var'_resil=0	if	!mi(`var'_resil_normal)	&	`var'_resil_normal<0.5
-				*replace	`var'_resil=1	if	!mi(`var'_resil_normal)	&	`var'_resil_normal>=0.5
-									
+			
 					*	Full sample
 					estpost	tabstat	TLU_IHS_resil_normal_`cutoff',	statistics(mean) columns(statistics) by(round)
 					est	store	TLU_IHS_resil_dyn_full_`cutoff'

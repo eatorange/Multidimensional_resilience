@@ -52,7 +52,7 @@
 					allexp_resil_normal	allexp_resil_gamma	foodexp_resil_normal	foodexp_resil_gamma	HDDS_resil_normal	HDDS_resil_gamma	TLU_resil_normal	TLU_resil_gamma	///	
 					TLU_IHS_resil_normal TLU_IHS_resil_gamma /*Oxen_resil_normal Oxen_resil_gamma*/	///
 					${bivariate_resil_measures}	///
-					if	!mi(mean_allexp_normal)	&	!mi(mean_foodexp_normal)	&	!mi(mean_HDDS_normal)	&	!mi(mean_TLU_normal)	&	!mi(mean_TLU_IHS_normal)	/*&	!mi(mean_Oxen_normal)*/,	///
+					if	!mi(mean_allexp_normal)	&	!mi(mean_foodexp_normal)	&	!mi(mean_HDDS_normal)	&	!mi(mean_TLU_normal)	&	!mi(mean_TLU_IHS_normal),	///
 					statistics(count mean	sd	min	max)	save
 			
 		mat	summstat_outcomes	=	r(StatTotal)'
@@ -89,23 +89,13 @@
 			cap	drop	diff_*
 			gen	diff_allexp_normal		=	(lnrexpaeu_peryear	-	mean_allexp_normal)^2
 			gen	diff_allexp_gamma		=	(lnrexpaeu_peryear	-	mean_allexp_gamma)^2
-			//gen	diff_allexp_igaussian	=	(lnrexpaeu_peryear	-	mean_allexp_igaussian)^2
-			
-			*gen	diff_foodexp_normal	=	(lnrfdxpmaeu_peryear	-	mean_foodexp_normal)^2
-			*gen	diff_foodexp_gamma	=	(lnrfdxpmaeu_peryear	-	mean_foodexp_gamma)^2
-			
+	
 			gen	diff_HDDS_normal	=	(HDDS	-	mean_HDDS_normal)^2
 			gen	diff_HDDS_gamma		=	(HDDS	-	mean_HDDS_gamma)^2
 			
-			*gen	diff_TLU_normal	=	(tlu	-	mean_TLU_normal)^2
-			*gen	diff_TLU_gamma	=	(tlu	-	mean_TLU_gamma)^2
-			
+		
 			gen	diff_TLU_IHS_normal	=	(TLU_IHS	-	mean_TLU_IHS_normal)^2
 			gen	diff_TLU_IHS_gamma	=	(TLU_IHS	-	mean_TLU_IHS_gamma)^2
-			
-			*gen	diff_Oxen_normal	=	(No_Oxen	-	mean_Oxen_normal)^2
-			*gen	diff_Oxen_gamma		=	(No_Oxen	-	mean_Oxen_gamma)^2
-			*gen	diff_Oxen_poisson	=	(No_Oxen	-	mean_Oxen_poisson)^2
 			
 			tabstat	diff_*, save
 			mat	MSE_cond_mean	=	r(StatTotal)'
@@ -183,27 +173,7 @@
 			graph	export	"${Output}/Dist_TLU_IHS_cond_mean_partial.png", as(png) replace
 			graph	close
 			
-/*
-			*	Oxen
-			twoway	(kdensity No_Oxen, 		 lc(green) lp(solid) lwidth(medium) graphregion(fcolor(white)) legend(label(1 "# Oxen")))	///
-					(kdensity mean_Oxen_normal, 	 lc(blue) lp(dash) lwidth(medium) graphregion(fcolor(white)) legend(label(2 "Cond.mean (Normal)")))	///
-					(kdensity mean_Oxen_gamma, lc(purple) lp(dot) lwidth(medium) graphregion(fcolor(white)) legend(label(3 "Cond.mean (Gamma)")))	///
-					(kdensity mean_Oxen_poisson, lc(red) lp(dashdot) lwidth(medium) graphregion(fcolor(white)) legend(label(4 "Cond.mean (Poisson)"))),	///
-					title("Distribution of Oxen and conditional means") ytitle("Density") xtitle("# Oxen")
-			graph	export	"${Output}/Dist_Oxen_cond_mean.png", as(png) replace
-			graph	close
-
-			
-			*	Oxen (partial)
-			twoway	(kdensity No_Oxen, 		 lc(green) lp(solid) lwidth(medium) graphregion(fcolor(white)) legend(label(1 "# Oxen")))	///
-					(kdensity mean_Oxen_normal, 	 lc(blue) lp(dash) lwidth(medium) graphregion(fcolor(white)) legend(label(2 "Cond.mean (Normal)")))	///
-					(kdensity mean_Oxen_gamma if inrange(mean_Oxen_gamma,-5,20), lc(purple) lp(dot) lwidth(medium) graphregion(fcolor(white)) legend(label(3 "Cond.mean (Gamma)")))	///
-					(kdensity mean_Oxen_poisson, lc(red) lp(dashdot) lwidth(medium) graphregion(fcolor(white)) legend(label(4 "Cond.mean (Poisson)"))),	///
-					title("Distribution of Oxen and conditional means (partial)") ytitle("Density") xtitle("# Oxen")
-			graph	export	"${Output}/Dist_Oxen_cond_mean_partial.png", as(png) replace
-			graph	close
-			
-	*/		
+	
 			*	Combine overall, HDDS and tlu(IHS) graph
 				graph	combine	allexp_normal_gamma	HDDS_normal_gamma TLU_IHS_normal_gamma, ///
 					/*title(Distribution of Welfare and Predicted Values)*/ ycommon	graphregion(fcolor(white))	 name(FigA1, replace) row(3)

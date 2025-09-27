@@ -76,32 +76,6 @@
 			
 		}
 		
-		*	(2025-6-30) disable old code.
-		/*
-		foreach	year	in	2008	 2010	 2012	2014	9999  	{
-					
-			*loc	year=2008
-		
-			*	Create an emply frame
-			cap	drop	PSNP_avg_`year'
-			frame 	change	default
-			cap	frame	drop	PSNP_avg_`year'
-			frame	create	PSNP_avg_`year'
-			frame	change	PSNP_avg_`year'
-			
-			use		"${dtInt}/adm3_matched.dta", clear
-			keep	if	round==`year'
-			
-			save	"${dtInt}/PSNP_avg_`year'", replace
-			
-			*	Import _ID variable
-			merge	1:1	ADM3_PCODE	using	"${dtRaw}/Shapefiles/Eth_admin_lv3", keepusing(_ID _CX _CY) assert(3) nogen
-			
-			geoframe	create	PSNP_avg_`year'	using	"${dtInt}/PSNP_avg_`year'", ///
-				replace	shp("${dtRaw}/Shapefiles/Eth_admin_lv3_shp")		//	Created frame overwrites current frame, unless "nocurrent" is specified.
-			*erase	"${dtInt}/PSNP_avg_`year'.dta"
-		}
-		*/
 		
 	*	Plot maps
 	
@@ -239,51 +213,3 @@
 			graph	combine	allexpresil9999	HDDSresil9999	TLU_IHSresil9999/*,	title(Resilience by woreda)*/
 			graph	export	"${Output}/Final/Figure5_resil_by_woreda_0814.png", as(png) replace
 			graph	close
-		
-/*
-	
-	*	Merge certain woredas
-	*	Guide: https://www.statalist.org/forums/forum/general-stata-discussion/general/1521655-merging-two-provinces-into-one-while-working-with-maps-shapefile
-	use	"Eth_admin_lv3.dta", clear
-
-	br	if	inlist(ADM3_EN,"Mirab Badowach","Misrak Badawacho")
-	keep	if	inlist(ADM3_EN,"Mirab Badowach","Misrak Badawacho")
-	gen	long	_IDAlaba	=	9995
-	isid _ID, sort
-	list	_IDAlaba	_ID	ADM3_EN
-	save	"Woreda_Alaba.dta", replace
-	
-	mergepoly	using	"Eth_admin_lv3_shp.dta", coor("Woreda_Alaba_coor.dta") replace
-	save "Woreda_Alaba_db.dta", replace
-	
-	use	"Eth_admin_lv3.dta", clear
-	merge 1:1 _ID using "Woreda_Alaba.dta", keep(master) nogen	//	drop sub-woreda to be merged.
-	
-	* append the single database record for the midwest and save the new combo db
-	append using "Woreda_Alaba_db.dta"
-	replace _ID = _IDAlaba if !mi(_IDAlaba)
-	replace ADM3_EN = "Alaba" if !mi(_IDAlaba)
-	isid _ID, sort
-	save "adm3_+_Alaba.dta", replace
-	
-	
-	* adjust the midwest coor identifier to match and append to US coor
-	use "Woreda_Alaba_coor.dta", clear
-	replace _ID = 9999
-	gen long shape_order = _n
-	save "Woreda_Alaba_coor.dta", replace
-	
-	use	"Eth_admin_lv3_shp.dta", clear
-	append	using	"Woreda_Alaba_coor.dta"
-	sort	_ID	shape_order
-	save	"adm3_+_Alaba_coor.dta", replace
-	
-	
-	geo2xy _Y _X, replace projection(albers)
-	save	"adm3_+_Alaba_coor_XY.dta", replace
-	
-	
-	use "adm3_+_Alaba.dta", clear
-	keep	if	_ID==828
-	spmap	using	"adm3_+_Alaba_coor_XY.dta", id(_ID)
-*/

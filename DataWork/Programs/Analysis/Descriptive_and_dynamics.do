@@ -12,16 +12,11 @@
 
 	DESCRIPTION: 	Construct dynamics measures
 		
-	ORGANIZATION:	0 -	Preamble
-						0.1 - Environment setup
-					1 - Additional cleaning
-					2 - Descriptive analyses
-					3 - Regression analyses
-					4 - Dynamics analyses
-					X - Save and Exit
+	ORGANIZATION:	1 - Descriptive analyses
+					2 - Dynamics analyses
 					
 	INPUTS: 		* PSNP pre-cleaned data
-					${data_analysis}/PSNP_resilience_dyn.dta ,	clear
+					${data_analysis}/PSNP_resilience_const.dta 
 										
 	OUTPUTS: 		* Various outputs (need to write it later)
 
@@ -488,14 +483,7 @@
 				graph	export	"${Output}/Final/Figure4_uniresil_dist.png", as(png) replace
 				graph	close
 			
-			/*
-			*	Combine graphs
-				graph	combine	dist_resil_consexp	dist_resil_HDDS dist_resil_TLU_IHS, ///
-					/*title(Distribution of Resilience Measures)*/ ycommon	graphregion(fcolor(white))	
-				graph	export	"${Output}/Fig3_uniresil_dist.png", as(png) replace
-				graph	close
-			*/
-	
+
 		*	Distribution of multivariate resiliences (fig 6 of July 2024 draft)
 		
 			*	Poverty and Nutritional
@@ -778,12 +766,7 @@
 			
 			forval	cutoff=2(2)6	{
 				
-				*	Generate a binary indicator if expenditure resilience is below 0.5
-				*cap	drop	`var'_resil
-				*gen		`var'_resil=.
-				*replace	`var'_resil=0	if	!mi(`var'_resil_normal)	&	`var'_resil_normal<0.5
-				*replace	`var'_resil=1	if	!mi(`var'_resil_normal)	&	`var'_resil_normal>=0.5
-									
+			
 					*	Full sample
 					estpost	tabstat	TLU_IHS_resil_normal_`cutoff',	statistics(mean) columns(statistics) by(round)
 					est	store	TLU_IHS_resil_dyn_full_`cutoff'

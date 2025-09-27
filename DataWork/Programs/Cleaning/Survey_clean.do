@@ -575,7 +575,7 @@
 		
 		*	Save
 		compress
-		save	"${dtInt}/PSNP_resilience_cleaned_public.dta", replace
+		save	"${dtInt}/PSNP_resilience_cleaned.dta", replace
 		
 		*	Import latitude and longitude
 		if	`import_GPS'==1	{
