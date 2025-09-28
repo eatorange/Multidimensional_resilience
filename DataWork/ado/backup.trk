@@ -1,4 +1,4 @@
-* 00000006
+* 00000012
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -385,4 +385,178 @@ f i\iematch.ado
 f i\iematch.sthlp
 f i\iesave.ado
 f i\iesave.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/u
+N unique.pkg
+D 26 Sep 2025
+U 7
+d 'UNIQUE': module to report number of unique values in variable(s)
+d 
+d  The command unique without a by reports the number of unique
+d values for the varlist. With a by it does the same, but also
+d creates a new variable (_Unique by default but can be named in
+d the gen option). This new variable contains the number of unique
+d values of the varlist for each level of the by variable. The new
+d variable is coded missing except for the first record in each
+d group defined by the levels of the by variable. The command is
+d useful for exploring data where the records refer to more than
+d one level, for example longitudinal data where each record refers
+d to a visit by a subject.
+d 
+d 
+d Requires: Stata version 10.1
+d 
+d Distribution-Date: 20200618
+d 
+d Author: Tony Brady
+d Support: email tony@@sealedenvelope.com
+d 
+f u\unique.ado
+f u\unique.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/u
+N univar.pkg
+D 28 Sep 2025
+U 8
+d 'UNIVAR': module to generate univariate summary with box-and-whiskers plot
+d 
+d univar displays a univariate summary of each variable in varlist,
+d using a horizontal format resembling that of summarize without
+d the detail option. However, the output includes a five-number
+d summary (minimum, 25th, 50th, 75th percentiles,  and maximum)
+d normally available only with the detail option of summarize. This
+d is version 1.1.2 of univar, updating the version in STB-36, as
+d corrected in Statalist Digest v3n249.
+d 
+d Author: John R. Gleason, Syracuse University
+d Support: email loesljrg@@ican.net
+d 
+d Distribution-Date: 19971103
+f u\univar.ado
+f u\univar.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/s
+N shapley2.pkg
+D 28 Sep 2025
+U 9
+d 'SHAPLEY2': module to compute additive decomposition of estimation statistics by regressors or groups of regressors
+d 
+d   Shapley2 is a post-estimation command to compute the
+d Shorrocks-Shapley decomposition of any statistic of the model
+d (normally the R squared). Shapley2 can be used for most
+d estimation commands, e.g. ols, probit, logit, oprobit. Compared
+d to the user written command shapley, shapley2 is faster and
+d enables you to compute the Shapley value by groups of variables.
+d The results are stored as e()-matrices, allowing the user to use
+d them afterwards, for instance to export them to LaTeX.
+d 
+d KW: Shapley
+d KW: decomposition
+d KW: post-estimation
+d 
+d Requires: Stata version 9.2
+d 
+d Distribution-Date: 20150617
+d 
+d Author: Florian Chavez Juarez, University of Geneva
+d Support: email Florian.Wendelspiess@@unige.ch
+d 
+f s\shapley2.ado
+f s\shapley2.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/w
+N winsor.pkg
+D 28 Sep 2025
+U 10
+d 'WINSOR': module to Winsorize a variable
+d 
+d winsor takes the non-missing values of a variable and generates a
+d new variable  identical except that the h highest and h lowest
+d values are replaced by the  next value counting inwards from the
+d extremes. h can be specified directly or  indirectly by
+d specifying a fraction p of the number of observations: h =  [p
+d n]. This transformation is named after the biostatistician C.P.
+d Winsor. This is version 1.3.0 of  the software.
+d 
+d Author: Nicholas J. Cox, University of Durham
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+d Distribution-Date: 20060809
+f w\winsor.ado
+f w\winsor.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/e
+N estout.pkg
+D 28 Sep 2025
+U 11
+d 'ESTOUT': module to make regression tables
+d 
+d  estout produces a table of regression results from one or
+d several models for use with spreadsheets, LaTeX, HTML, or a
+d word-processor table. eststo stores a quick copy of the active
+d estimation results for later tabulation. esttab is a wrapper for
+d estout. It displays a pretty looking publication-style regression
+d table without much typing. estadd adds additional results to the
+d e()-returns for one or several models previously fitted and
+d stored. This package subsumes the previously circulated esto,
+d esta, estadd,  and estadd_plus. An earlier version of estout is
+d available  as estout1.
+d 
+d KW: estimates
+d KW: LaTeX
+d KW: HTML
+d KW: word processor
+d KW: output
+d 
+d Requires: Stata version 8.2
+d 
+d Distribution-Date: 20230212
+d 
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d 
+f _\_eststo.ado
+f _\_eststo.hlp
+f e\estadd.ado
+f e\estadd.hlp
+f e\estout.ado
+f e\estout.hlp
+f e\eststo.ado
+f e\eststo.hlp
+f e\estpost.ado
+f e\estpost.hlp
+f e\esttab.ado
+f e\esttab.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/f
+N fre.pkg
+D 28 Sep 2025
+U 12
+d 'FRE': module to display one-way frequency table
+d 
+d   fre displays, for each specified variable, a univariate
+d frequency table containing counts, percent, and cumulative
+d percent. Variables may be string or numeric. Labels, in full
+d length, and values are printed. By default, fre only tabulates
+d the smallest and largest 10 values (along with all missing
+d values), but this can be changed. Furthermore,  values with zero
+d observed frequency may be included in the  tables. The default
+d for fre is to display the frequency  tables in the results
+d window. Alternatively, the tables may be written to a file on
+d disk, either tab-delimited or  LaTeX-formatted.
+d 
+d KW: data management
+d KW: frequencies
+d KW: frequency table
+d KW: tabulation
+d 
+d Requires: Stata version 9.2
+d 
+d Distribution-Date: 20210531
+d 
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d 
+f f\fre.ado
+f f\fre.hlp
 e
